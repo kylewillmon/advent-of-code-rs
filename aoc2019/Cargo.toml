@@ -1,0 +1,9 @@
+[package]
+name = "aoc2019"
+version = "0.1.0"
+authors = ["Kyle Willmon <kylewillmon@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+
+aoclib = { path = "../aoclib" }
