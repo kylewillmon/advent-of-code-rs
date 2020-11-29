@@ -1,26 +1,36 @@
+mod solver;
 mod day;
 
 pub use day::Day;
 
-pub struct AOC {
-    year: u16,
-    days: Vec<Day>,
+pub struct AOC<'a> {
+    days: Vec<Day<'a>>,
 }
 
-impl AOC {
-    pub fn new(year: u16) -> Self {
+impl<'a> AOC<'a> {
+    pub fn new() -> Self {
         AOC {
-            year,
             days: Vec::new(),
         }
     }
 
-    pub fn day(&mut self, d: day::Day) -> &mut Self {
+    pub fn day<'b>(mut self, d: day::Day<'b>) -> Self
+        where 'b: 'a
+    {
         self.days.push(d);
         self
     }
 
-    pub fn run(&self) {
-        println!("AOC year {}", self.year);
+    pub fn run(self, day: Option<u8>, input: String) -> String {
+        let d = if let Some(day) = day {
+            self.days.into_iter().find(|x| x.day == day)
+        } else {
+            self.days.into_iter().max_by_key(|x| x.day)
+        };
+
+        match d {
+            Some(d) => d.solve(input),
+            None => "Error: Day not found".to_string()
+        }
     }
 }

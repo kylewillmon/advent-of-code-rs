@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 
 aoclib = { path = "../aoclib" }
+clap = "2.33.3"
