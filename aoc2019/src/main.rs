@@ -3,6 +3,8 @@ use std::fs;
 use clap::{App, Arg};
 use aoclib::{self, AOC, Day};
 
+mod day1;
+
 fn main() {
     let m = App::new("Advent of Code 2019 solvers")
                     .author("Kyle Willmon <kylewillmon@gmail.com>")
@@ -28,10 +30,11 @@ fn main() {
 
     let aoc = AOC::new()
         .day(Day::new(1)
-            .part(1, |_| 1));
+            .part(1, day1::part1)
+            .part(2, day1::part2));
 
     match get_input(m.value_of("INPUT").unwrap()) {
-        Ok(input) => println!("{}", aoc.run(day, input)),
+        Ok(input) => print!("{}", aoc.run(day, input)),
         Err(err) => println!("Error: {}", err),
     };
 }
