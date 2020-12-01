@@ -3,4 +3,5 @@
 members = [
     "aoclib",
     "aoc2019",
+    "aoc2020",
 ]
