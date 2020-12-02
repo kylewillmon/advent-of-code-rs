@@ -3,8 +3,9 @@ use std::fs;
 use clap::{App, Arg};
 use aoclib::{self, AOC, Day};
 
-mod day1;
 pub(crate) mod parse;
+mod day1;
+mod day2;
 
 fn main() {
     let m = App::new("Advent of Code 2020 solvers")
@@ -32,7 +33,10 @@ fn main() {
     let aoc = AOC::new()
         .day(Day::new(1)
             .part(1, day1::part1)
-            .part(2, day1::part2));
+            .part(2, day1::part2))
+        .day(Day::new(2)
+            .part(1, day2::part1)
+            .part(2, day2::part2));
 
     match get_input(m.value_of("INPUT").unwrap()) {
         Ok(input) => print!("{}", aoc.run(day, input)),
