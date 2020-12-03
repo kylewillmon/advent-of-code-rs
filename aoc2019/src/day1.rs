@@ -4,7 +4,7 @@ pub fn part1(input: String) -> u32
     parse_input(input)
         .into_iter()
         .map(|x| calc_fuel(x))
-        .fold(0, |a, b| a+b)
+        .sum()
 }
 
 pub fn part2(input: String) -> u32
@@ -12,7 +12,7 @@ pub fn part2(input: String) -> u32
     parse_input(input)
         .into_iter()
         .map(|x| calc_fuel_recurse(x))
-        .fold(0, |a, b| a+b)
+        .sum()
 }
 
 fn calc_fuel(weight: u32) -> u32 {

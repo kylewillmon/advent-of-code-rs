@@ -42,5 +42,5 @@ pub fn part2(input: String) -> usize
 
     slopes.into_iter()
         .map(|(c, r)| m.count_trees(c, r))
-        .fold(1, |a, b| a * b)
+        .product()
 }
