@@ -3,6 +3,14 @@ use std::collections::{HashSet, HashMap};
 
 struct Passport(HashMap<String, String>);
 
+fn is_num_between<T: AsRef<str>>(val: T, min: u32, max: u32) -> bool
+{
+    val.as_ref()
+        .parse::<u32>()
+        .map(|num| min <= num && num <= max)
+        .unwrap_or(false)
+}
+
 impl Passport {
     fn validate_keys(&self) -> bool
     {
@@ -19,6 +27,70 @@ impl Passport {
         let keys: HashSet<String> = self.0.keys().cloned().collect();
 
         keys.is_superset(&required_keys)
+    }
+
+    fn validate_num<T: AsRef<str>>(&self, key: T, min: u32, max: u32) -> bool
+    {
+        self.0.get(&String::from(key.as_ref()))
+            .map(|val| is_num_between(val, min, max))
+            .unwrap_or(false)
+    }
+
+    fn validate_height(&self) -> bool
+    {
+        self.0.get(&"hgt".to_string())
+            .map(|val| {
+                if let Some(val) = val.strip_suffix("in") {
+                    return is_num_between(val, 59, 76);
+                }
+                if let Some(val) = val.strip_suffix("cm") {
+                    return is_num_between(val, 150, 193);
+                }
+                false
+            })
+            .unwrap_or(false)
+    }
+
+    fn validate_hair_color(&self) -> bool
+    {
+        self.0.get(&"hcl".to_string())
+            .map(|val| {
+                val.strip_prefix("#")
+                    .map(|hex| hex.chars().all(|c| c >= '0' && c <= '9' || c >= 'a' && c <= 'f'))
+                    .unwrap_or(false)
+            })
+            .unwrap_or(false)
+    }
+
+    fn validate_eye_color(&self) -> bool
+    {
+        self.0.get(&"ecl".to_string())
+            .map(|val|
+                match val.as_str() {
+                    "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth" => true,
+                    _ => false
+                }
+            )
+            .unwrap_or(false)
+    }
+
+    fn validate_id(&self) -> bool
+    {
+        self.0.get(&"pid".to_string())
+            .map(|val| val.len() == 9 && val.chars().all(|c| c.is_ascii_digit()))
+            .unwrap_or(false)
+    }
+
+    fn validate(&self) -> bool
+    {
+        self.validate_keys()
+        && self.validate_num("byr", 1920, 2002)
+        && self.validate_num("iyr", 2010, 2020)
+        && self.validate_num("eyr", 2020, 2030)
+        && self.validate_height()
+        && self.validate_hair_color()
+        && self.validate_eye_color()
+        && self.validate_id()
     }
 }
 
@@ -52,6 +124,18 @@ pub fn part1(input: String) -> usize
         .count()
 }
 
+pub fn part2(input: String) -> usize
+{
+    // Beware the CRLF
+    let input = input.replace("\r\n", "\n");
+    let entries = input.split("\n\n");
+
+    entries
+        .map(|e| e.parse::<Passport>().unwrap())
+        .filter(|p| p.validate())
+        .count()
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -73,5 +157,42 @@ iyr:2011 ecl:brn hgt:59in";
     #[test]
     fn part1_example() {
         assert_eq!(2, part1(EXAMPLE.to_string()));
+    }
+
+    const INVALID: &str = "eyr:1972 cid:100
+hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926
+
+iyr:2019
+hcl:#602927 eyr:1967 hgt:170cm
+ecl:grn pid:012533040 byr:1946
+
+hcl:dab227 iyr:2012
+ecl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277
+
+hgt:59cm ecl:zzz
+eyr:2038 hcl:74454a iyr:2023
+pid:3556412378 byr:2007";
+
+    #[test]
+    fn part2_invalid() {
+        assert_eq!(0, part2(INVALID.to_string()));
+    }
+
+    const VALID: &str = "pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980
+hcl:#623a2f
+
+eyr:2029 ecl:blu cid:129 byr:1989
+iyr:2014 pid:896056539 hcl:#a97842 hgt:165cm
+
+hcl:#888785
+hgt:164cm byr:2001 iyr:2015 cid:88
+pid:545766238 ecl:hzl
+eyr:2022
+
+iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719";
+
+    #[test]
+    fn part2_valid() {
+        assert_eq!(4, part2(VALID.to_string()));
     }
 }

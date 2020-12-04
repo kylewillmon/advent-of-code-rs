@@ -43,7 +43,8 @@ fn main() {
             .part(1, day3::part1)
             .part(2, day3::part2))
         .day(Day::new(4)
-            .part(1, day4::part1));
+            .part(1, day4::part1)
+            .part(2, day4::part2));
 
     match get_input(m.value_of("INPUT").unwrap()) {
         Ok(input) => print!("{}", aoc.run(day, input)),
