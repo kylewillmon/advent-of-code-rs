@@ -7,6 +7,7 @@ pub(crate) mod parse;
 mod day1;
 mod day2;
 mod day3;
+mod day4;
 
 fn main() {
     let m = App::new("Advent of Code 2020 solvers")
@@ -40,7 +41,9 @@ fn main() {
             .part(2, day2::part2))
         .day(Day::new(3)
             .part(1, day3::part1)
-            .part(2, day3::part2));
+            .part(2, day3::part2))
+        .day(Day::new(4)
+            .part(1, day4::part1));
 
     match get_input(m.value_of("INPUT").unwrap()) {
         Ok(input) => print!("{}", aoc.run(day, input)),
