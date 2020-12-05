@@ -5,7 +5,6 @@ use aoclib::{self, AOC, Day};
 
 mod day1;
 mod day2;
-mod day3;
 
 fn main() {
     let m = App::new("Advent of Code 2019 solvers")

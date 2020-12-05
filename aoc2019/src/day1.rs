@@ -1,18 +1,21 @@
+use std::convert::Infallible;
 
-pub fn part1(input: String) -> u32
+pub fn part1(input: String) -> Result<u32, Infallible>
 {
-    parse_input(input)
+    let total = parse_input(input)
         .into_iter()
         .map(|x| calc_fuel(x))
-        .sum()
+        .sum();
+    Ok(total)
 }
 
-pub fn part2(input: String) -> u32
+pub fn part2(input: String) -> Result<u32, Infallible>
 {
-    parse_input(input)
+    let total = parse_input(input)
         .into_iter()
         .map(|x| calc_fuel_recurse(x))
-        .sum()
+        .sum();
+    Ok(total)
 }
 
 fn calc_fuel(weight: u32) -> u32 {

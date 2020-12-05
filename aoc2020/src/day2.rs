@@ -1,19 +1,22 @@
+use std::convert::Infallible;
 use std::str::FromStr;
 
-pub fn part1(input: String) -> usize
+pub fn part1(input: String) -> Result<usize, Infallible>
 {
-    parse_input(input)
+    let res = parse_input(input)
         .into_iter()
         .filter(|(pol, pass)| pol.check(pass))
-        .count()
+        .count();
+    Ok(res)
 }
 
-pub fn part2(input: String) -> usize
+pub fn part2(input: String) -> Result<usize, Infallible>
 {
-    parse_input(input)
+    let res = parse_input(input)
         .into_iter()
         .filter(|(pol, pass)| pol.check2(pass))
-        .count()
+        .count();
+    Ok(res)
 }
 
 struct PasswordPolicy {

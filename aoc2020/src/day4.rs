@@ -1,3 +1,4 @@
+use std::convert::Infallible;
 use std::str::FromStr;
 use std::collections::{HashSet, HashMap};
 
@@ -112,28 +113,30 @@ impl FromStr for Passport {
     }
 }
 
-pub fn part1(input: String) -> usize
+pub fn part1(input: String) -> Result<usize, Infallible>
 {
     // Beware the CRLF
     let input = input.replace("\r\n", "\n");
     let entries = input.split("\n\n");
 
-    entries
+    let num = entries
         .map(|e| e.parse::<Passport>().unwrap())
         .filter(|p| p.validate_keys())
-        .count()
+        .count();
+    Ok(num)
 }
 
-pub fn part2(input: String) -> usize
+pub fn part2(input: String) -> Result<usize, Infallible>
 {
     // Beware the CRLF
     let input = input.replace("\r\n", "\n");
     let entries = input.split("\n\n");
 
-    entries
+    let num = entries
         .map(|e| e.parse::<Passport>().unwrap())
         .filter(|p| p.validate())
-        .count()
+        .count();
+    Ok(num)
 }
 
 #[cfg(test)]
@@ -156,7 +159,7 @@ iyr:2011 ecl:brn hgt:59in";
 
     #[test]
     fn part1_example() {
-        assert_eq!(2, part1(EXAMPLE.to_string()));
+        assert_eq!(Ok(2), part1(EXAMPLE.to_string()));
     }
 
     const INVALID: &str = "eyr:1972 cid:100
@@ -175,7 +178,7 @@ pid:3556412378 byr:2007";
 
     #[test]
     fn part2_invalid() {
-        assert_eq!(0, part2(INVALID.to_string()));
+        assert_eq!(Ok(0), part2(INVALID.to_string()));
     }
 
     const VALID: &str = "pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980
@@ -193,6 +196,6 @@ iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719";
 
     #[test]
     fn part2_valid() {
-        assert_eq!(4, part2(VALID.to_string()));
+        assert_eq!(Ok(4), part2(VALID.to_string()));
     }
 }

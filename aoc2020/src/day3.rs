@@ -1,3 +1,4 @@
+use std::convert::Infallible;
 
 struct Map(String);
 
@@ -22,13 +23,13 @@ impl Map {
     }
 }
 
-pub fn part1(input: String) -> usize
+pub fn part1(input: String) -> Result<usize, Infallible>
 {
-    Map::new(input).count_trees(3, 1)
+    Ok(Map::new(input).count_trees(3, 1))
 }
 
 
-pub fn part2(input: String) -> usize
+pub fn part2(input: String) -> Result<usize, Infallible>
 {
     let slopes = vec!(
         (1, 1),
@@ -40,7 +41,8 @@ pub fn part2(input: String) -> usize
 
     let m = Map::new(input);
 
-    slopes.into_iter()
+    let res = slopes.into_iter()
         .map(|(c, r)| m.count_trees(c, r))
-        .product()
+        .product();
+    Ok(res)
 }

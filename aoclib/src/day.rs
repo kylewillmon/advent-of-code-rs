@@ -1,3 +1,4 @@
+use std::error::Error;
 use std::fmt::Write;
 
 use super::solver;
@@ -27,7 +28,10 @@ impl<'a> Day<'a> {
         let mut out = String::new();
         for part in self.parts.into_iter() {
             writeln!(out, "Part: {}", part.part).unwrap();
-            writeln!(out, "Solution: {}\n", part.solve(input.clone())).unwrap();
+            match part.solve(input.clone()) {
+                Ok(solution) => writeln!(out, "Solution: {}", solution).unwrap(),
+                Err(e) => writeln!(out, "Error: {}", e).unwrap(),
+            }
         }
         out
     }
@@ -48,7 +52,7 @@ impl<'a> Part<'a> {
         }
     }
 
-    fn solve(self, input: String) -> String {
+    fn solve(self, input: String) -> Result<String, Box<dyn 'static + Error>> {
         self.solver.solve(input)
     }
 }

@@ -54,7 +54,7 @@ fn parse_motion(motion: &str) -> Result<(char, u32), String>
     let (dir, len) = motion.split_at(1);
     let dir = dir.chars().nth(0).ok_or("direrction not found")?;
     let len = len.parse::<u32>().map_err(|e| format!("{}", e))?;
-    (dir, len)
+    Ok((dir, len))
 }
 
 fn parse_lines(input: String) -> Result<Vec<Line>, String>

@@ -1,3 +1,4 @@
+use std::convert::Infallible;
 
 fn run_intcode(mut prog: Vec<u32>) -> Option<u32>
 {
@@ -23,17 +24,17 @@ fn run_intcode(mut prog: Vec<u32>) -> Option<u32>
     prog.get(0).map(|&x| x)
 }
 
-pub fn part1(input: String) -> u32
+pub fn part1(input: String) -> Result<u32, Infallible>
 {
     let mut prog = parse_input(input);
 
     prog[1] = 12;
     prog[2] = 2;
 
-    return run_intcode(prog).unwrap();
+    return Ok(run_intcode(prog).unwrap());
 }
 
-pub fn part2(input: String) -> u32
+pub fn part2(input: String) -> Result<u32, Infallible>
 {
     let prog = parse_input(input);
 
@@ -45,7 +46,7 @@ pub fn part2(input: String) -> u32
 
             if let Some(i) = run_intcode(prog) {
                 if i == 19690720 {
-                    return (x * 100 + y) as u32;
+                    return Ok((x * 100 + y) as u32);
                 }
             }
         }

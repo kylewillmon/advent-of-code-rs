@@ -1,14 +1,18 @@
 use std::fmt;
+use std::error::Error;
 
 pub trait Solver {
-    fn solve(self: Box<Self>, input: String) -> String;
+    fn solve(self: Box<Self>, input: String) -> Result<String, Box<dyn 'static + Error>>;
 }
 
-impl<F, T: fmt::Display> Solver for F
-    where F: FnOnce(String) -> T
+impl<F, T: fmt::Display, E: 'static + Error> Solver for F
+    where F: Fn(String) -> Result<T, E>
 {
-    fn solve(self: Box<Self>, input: String) -> String
+    fn solve(self: Box<Self>, input: String) -> Result<String, Box<dyn 'static + Error>>
     {
-        self(input).to_string()
+        match self(input) {
+            Ok(v) => Ok(v.to_string()),
+            Err(e) => Err(e.into()),
+        }
     }
 }
