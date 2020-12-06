@@ -115,8 +115,6 @@ impl FromStr for Passport {
 
 pub fn part1(input: String) -> Result<usize, Infallible>
 {
-    // Beware the CRLF
-    let input = input.replace("\r\n", "\n");
     let entries = input.split("\n\n");
 
     let num = entries
@@ -128,8 +126,6 @@ pub fn part1(input: String) -> Result<usize, Infallible>
 
 pub fn part2(input: String) -> Result<usize, Infallible>
 {
-    // Beware the CRLF
-    let input = input.replace("\r\n", "\n");
     let entries = input.split("\n\n");
 
     let num = entries

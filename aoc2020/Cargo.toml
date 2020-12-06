@@ -9,3 +9,5 @@ edition = "2018"
 aoclib = { path = "../aoclib" }
 clap = "2.33.3"
 itertools = "0.9"
+thiserror = "1.0.22"
+displaydoc = "0.1.7"

@@ -26,6 +26,7 @@ impl<'a> Day<'a> {
 
     pub fn solve(self, input: String) -> String {
         let mut out = String::new();
+        let input = input.replace("\r\n", "\n");
         for part in self.parts.into_iter() {
             writeln!(out, "Part: {}", part.part).unwrap();
             match part.solve(input.clone()) {
