@@ -1,5 +1,6 @@
-use std::error::Error;
 use std::fmt::Write;
+
+use anyhow;
 
 use super::solver;
 
@@ -53,7 +54,7 @@ impl<'a> Part<'a> {
         }
     }
 
-    fn solve(self, input: String) -> Result<String, Box<dyn 'static + Error>> {
+    fn solve(self, input: String) -> Result<String, anyhow::Error> {
         self.solver.solve(input)
     }
 }
