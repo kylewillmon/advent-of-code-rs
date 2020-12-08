@@ -10,4 +10,6 @@ pub enum AocError {
     ParseError(String),
     /// could not parse int
     InvalidInt(#[from] ParseIntError),
+    /// unknown error occured
+    Unknown,
 }
