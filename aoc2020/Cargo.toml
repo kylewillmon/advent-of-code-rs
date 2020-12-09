@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 
 aoclib = { path = "../aoclib" }
+anyhow = "1.0.35"
 clap = "2.33.3"
 itertools = "0.9"
 thiserror = "1.0.22"
