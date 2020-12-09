@@ -1,5 +1,6 @@
 mod solver;
 mod day;
+pub mod strtools;
 
 pub use day::Day;
 
