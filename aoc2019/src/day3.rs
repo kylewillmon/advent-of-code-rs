@@ -1,75 +1,38 @@
-#[derive(PartialEq,PartialOrd,Debug,Clone)]
-struct Point {
-    x: u32,
-    y: u32,
+use anyhow::{anyhow, Result};
+
+pub fn part1(_input: String) -> Result<u32> {
+    Err(anyhow!("not yet implemented"))
 }
 
-impl Point {
-    fn new(x: u32, y: u32) -> Point
-    {
-        Point { x, y }
-    }
+pub fn part2(_input: String) -> Result<u32> {
+    Err(anyhow!("not yet implemented"))
+}
 
-    fn origin() -> Point
-    {
-        Self::new(0, 0)
-    }
-
-    fn translate(&self, dir: char, len: u32) -> Point
-    {
-        match dir {
-            'R' => Point { x: self.x + len, y: self.y },
-            'L' => Point { x: self.x - len, y: self.y },
-            'U' => Point { x: self.x, y: self.y + len },
-            'D' => Point { x: self.x, y: self.y - len },
-            _ => panic!("invalid direction"),
-        }
+fn move_point(start: (i32, i32), dir: char, len: i32) -> (i32, i32) {
+    match dir {
+        'R' => (start.0 + len, start.1),
+        'L' => (start.0 - len, start.1),
+        'U' => (start.0, start.1 + len),
+        'D' => (start.0, start.1 - len),
+        _ => panic!("invalid direction"),
     }
 }
 
-#[derive(PartialEq,Debug)]
-struct Line {
-    start: Point,
-    end: Point,
-}
+fn wire_points<'a>(line: &'a str) -> impl Iterator<Item = (i32, i32)> + 'a {
+    line
+        .split(',')
+        .scan((0, 0), |state, motion| {
+            let (dir, len) = motion.split_at(1);
+            let dir = dir.chars().nth(0).unwrap();
+            let len = len.parse::<i32>().unwrap();
 
-impl Line {
-    fn new(a: Point, b: Point) -> Self {
-        if a < b {
-            Line {
-                start: a,
-                end: b,
-            }
-        } else {
-            Line {
-                start: b,
-                end: a,
-            }
-        }
-    }
-}
+            let start = *state;
 
-fn parse_motion(motion: &str) -> Result<(char, u32), String>
-{
-    let (dir, len) = motion.split_at(1);
-    let dir = dir.chars().nth(0).ok_or("direrction not found")?;
-    let len = len.parse::<u32>().map_err(|e| format!("{}", e))?;
-    Ok((dir, len))
-}
+            *state = move_point(start, dir, len);
 
-fn parse_lines(input: String) -> Result<Vec<Line>, String>
-{
-    let mut lines = Vec::new();
-    let mut cur = Point::origin();
-    for motion in input.split(',') {
-        let (dir, lenstr) = motion.split_at(1);
-        let len = lenstr.parse::<u32>().map_err(|e| format!("{}", e))?;
-        let next = cur.translate(dir.chars().nth(0).ok_or("direrction not found")?, len);
-
-        lines.push(Line::new(cur, next.clone()));
-        cur = next;
-    }
-    Ok(lines)
+            Some((1..=len).map(move |l| move_point(start, dir, l)))
+        })
+        .flatten()
 }
 
 #[cfg(test)]
@@ -77,15 +40,15 @@ mod test {
     use super::*;
 
     #[test]
-    fn test_parse_lines() {
-        let input = "R3,U1,L2,D1".to_string();
-        let lines = vec!(
-            Line::new(Point::new(0, 0), Point::new(3, 0)),
-            Line::new(Point::new(3, 0), Point::new(3, 1)),
-            Line::new(Point::new(3, 1), Point::new(1, 1)),
-            Line::new(Point::new(1, 1), Point::new(1, 0)),
-        );
+    fn test_wire_points() {
+        let input = "R3,U1,L2,D1";
+        let points = vec![
+            (1, 0), (2, 0), (3, 0),
+            (3, 1),
+            (2, 1), (1, 1),
+            (1, 0),
+        ];
 
-        assert_eq!(Ok(lines), parse_lines(input));
+        assert_eq!(points, wire_points(input).collect::<Vec<(i32, i32)>>());
     }
 }
