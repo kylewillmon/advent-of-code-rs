@@ -129,15 +129,15 @@ impl<T: Eq + Clone + Default> Grid<T> {
         G: Fn(usize, &T) -> T,
     {
         let (rows, cols) = (self.rows, self.cols);
-        let mut other = Grid { 
+        let mut other = Grid {
             grid: vec![T::default(); self.rows * self.cols],
             rows,
             cols,
         };
-    
+
         let mut cur = &mut self;
         let mut next = &mut other;
-    
+
         while *cur != *next {
             {
                 let cur = cur._as_slices();
@@ -159,7 +159,7 @@ impl<T: Eq + Clone + Default> Grid<T> {
     }
 }
 
-impl<T: Eq + Clone + Default + TryFrom<char>> FromStr for Grid<T> 
+impl<T: Eq + Clone + Default + TryFrom<char>> FromStr for Grid<T>
 where
     <T as TryFrom<char>>::Error: Into<AocError>
 {
