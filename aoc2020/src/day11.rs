@@ -1,14 +1,15 @@
 use std::convert::TryFrom;
 use std::str::FromStr;
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 
 use super::error::AocError;
 
 pub fn part1(input: String) -> Result<usize> {
     let mut grid = input.parse::<Grid<Space>>()?;
 
-    grid = grid.run_simulation(
+    grid = run_simulation(
+        grid,
         |&s| s == Space::TakenSeat,
         |count, &s| {
             if count == 0 {
@@ -26,11 +27,65 @@ pub fn part1(input: String) -> Result<usize> {
             }
         }
     );
-    Ok(grid.count(|&s| s == Space::TakenSeat))
+    Ok(grid.iter().filter(|&&s| s == Space::TakenSeat).count())
 }
 
-pub fn part2(_input: String) -> Result<usize> {
-    Err(anyhow!("not yet implemented"))
+const NEIGHBORS: [(isize, isize); 8] = [
+    (-1, -1), (-1, 0), (-1, 1),
+    ( 0, -1),          ( 0, 1),
+    ( 1, -1), ( 1, 0), ( 1, 1),
+];
+
+pub fn part2(input: String) -> Result<usize> {
+    let mut grid = input.parse::<Grid<Space>>()?;
+    let mut other: Grid<Space> = Grid::with_size(grid.rows(), grid.cols());
+
+    let mut cur = &mut grid;
+    let mut next = &mut other;
+
+    while *cur != *next {
+        for r in 0..cur.rows() {
+            for c in 0..cur.cols() {
+                let mut count = 0;
+                for (dr, dc) in NEIGHBORS.iter().cloned() {
+                    let mut r = r.wrapping_add(dr as usize);
+                    let mut c = c.wrapping_add(dc as usize);
+                    let mut loc = cur.get((r, c));
+                    while let Some(s) = loc {
+                        if *s == Space::Floor {
+                            r = r.wrapping_add(dr as usize);
+                            c = c.wrapping_add(dc as usize);
+                            loc = cur.get((r, c));
+                        } else {
+                            if *s == Space::TakenSeat {
+                                count += 1;
+                            }
+                            loc = None;
+                        }
+                    }
+                }
+
+                let s = *cur.get((r, c)).unwrap();
+                let new_space = if count == 0 {
+                    match s {
+                        Space::EmptySeat => Space::TakenSeat,
+                        _ => s,
+                    }
+                } else if count >= 5 {
+                    match s {
+                        Space::TakenSeat => Space::EmptySeat,
+                        _ => s,
+                    }
+                } else {
+                    s
+                };
+                *next.get_mut((r, c)).unwrap() = new_space;
+            }
+        }
+        let tmp = cur; cur = next; next = tmp;
+    }
+
+    Ok(grid.iter().filter(|&&s| s == Space::TakenSeat).count())
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -91,8 +146,36 @@ fn _neighbors(pos: (usize, usize), grid_size: (usize, usize)) -> Vec<(usize, usi
         .collect()
 }
 
+fn run_simulation<F, G>(mut grid: Grid<Space>, filter: F, translate: G) -> Grid<Space>
+where
+    F: Fn(&Space) -> bool,
+    G: Fn(usize, &Space) -> Space,
+{
+    let mut other: Grid<Space> = Grid::with_size(grid.rows(), grid.cols());
+
+    let mut cur = &mut grid;
+    let mut next = &mut other;
+
+    while *cur != *next {
+        for r in 0..cur.rows() {
+            for c in 0..cur.cols() {
+                let mut count = 0;
+                for (r, c) in _neighbors((r, c), (cur.rows(), cur.cols())) {
+                    if filter(cur.get((r, c)).unwrap()) {
+                        count += 1;
+                    }
+                }
+                *next.get_mut((r, c)).unwrap() = translate(count, cur.get((r, c)).unwrap());
+            }
+        }
+        let tmp = cur; cur = next; next = tmp;
+    }
+
+    grid
+}
+
 impl<T: Eq + Clone + Default> Grid<T> {
-    fn new(grid: Vec<T>, rows: usize) -> Self {
+    fn from_vec(grid: Vec<T>, rows: usize) -> Self {
         let cols = if rows == 0 {
             0
         } else {
@@ -106,6 +189,49 @@ impl<T: Eq + Clone + Default> Grid<T> {
         }
     }
 
+    fn with_size(rows: usize, cols: usize) -> Self {
+        let size = rows * cols;
+        if size == 0 {
+            Grid {
+                grid: Vec::new(),
+                rows: 0,
+                cols: 0,
+            }
+        } else {
+            Grid {
+                grid: vec![T::default(); size],
+                rows,
+                cols,
+            }
+        }
+    }
+
+    fn rows(&self) -> usize {
+        self.rows
+    }
+
+    fn cols(&self) -> usize {
+        self.cols
+    }
+
+    // calculate index for inner vector. This does no bounds checking and will never fail. Let the vector handle bounds checking.
+    fn _pos_index(&self, pos: (usize, usize)) -> usize {
+        pos.0.wrapping_mul(self.cols).wrapping_add(pos.1)
+    }
+
+    fn get(&self, pos: (usize, usize)) -> Option<&T> {
+        if pos.0 < self.rows && pos.1 < self.cols {
+            self.grid.get(self._pos_index(pos))
+        } else {
+            None
+        }
+    }
+
+    fn get_mut(&mut self, pos: (usize, usize)) -> Option<&mut T> {
+        let idx = self._pos_index(pos);
+        self.grid.get_mut(idx)
+    }
+
     fn _as_mut_slices(&mut self) -> Vec<&mut[T]> {
         self.grid.as_mut_slice().chunks_mut(self.cols).collect()
     }
@@ -114,48 +240,8 @@ impl<T: Eq + Clone + Default> Grid<T> {
         self.grid.as_slice().chunks(self.cols).collect()
     }
 
-    fn count<F>(&self, filter: F) -> usize
-    where
-        F: Fn(&T) -> bool
-    {
+    fn iter<'a>(&'a self) -> impl Iterator<Item=&T> + 'a {
         self.grid.iter()
-            .filter(|i| filter(i))
-            .count()
-    }
-
-    fn run_simulation<F, G>(mut self, filter: F, translate: G) -> Self
-    where
-        F: Fn(&T) -> bool,
-        G: Fn(usize, &T) -> T,
-    {
-        let (rows, cols) = (self.rows, self.cols);
-        let mut other = Grid {
-            grid: vec![T::default(); self.rows * self.cols],
-            rows,
-            cols,
-        };
-
-        let mut cur = &mut self;
-        let mut next = &mut other;
-
-        while *cur != *next {
-            {
-                let cur = cur._as_slices();
-                let mut next = next._as_mut_slices();
-                for r in 0..rows {
-                    for c in 0..cols {
-                        let count = _neighbors((r, c), (rows, cols))
-                            .into_iter()
-                            .filter(|(r, c)| filter(&cur[*r][*c]))
-                            .count();
-                        next[r][c] = translate(count, &cur[r][c]);
-                    }
-                }
-            }
-            let tmp = cur; cur = next; next = tmp;
-        }
-
-        self
     }
 }
 
@@ -183,7 +269,7 @@ where
                 Err(e) => return Err(e.into()),
             }
         }
-        Ok(Grid::new(v, rows))
+        Ok(Grid::from_vec(v, rows))
     }
 }
 
@@ -205,5 +291,10 @@ L.LLLLL.LL";
     #[test]
     fn part1_example() {
         assert_eq!(37, part1(EXAMPLE.to_string()).unwrap());
+    }
+
+    #[test]
+    fn part2_example() {
+        assert_eq!(26, part2(EXAMPLE.to_string()).unwrap());
     }
 }
