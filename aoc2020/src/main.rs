@@ -18,6 +18,7 @@ mod day11;
 mod day12;
 mod day13;
 mod day14;
+mod day15;
 
 fn main() {
     let m = App::new("Advent of Code 2020 solvers")
@@ -81,7 +82,10 @@ fn main() {
             .part(2, day13::part2))
         .day(Day::new(14)
             .part(1, day14::part1)
-            .part(2, day14::part2));
+            .part(2, day14::part2))
+        .day(Day::new(15)
+            .part(1, day15::part1)
+            .part(2, day15::part2));
 
     match get_input(m.value_of("INPUT").unwrap()) {
         Ok(input) => print!("{}", aoc.run(day, input)),
