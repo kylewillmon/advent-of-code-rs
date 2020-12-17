@@ -1,35 +1,101 @@
 use std::ops::RangeInclusive;
+use std::collections::HashSet;
 
-use anyhow::Result;
+use itertools::Itertools;
+use anyhow::{anyhow, Result};
 use aoclib::strtools;
 
 pub fn part1(input: String) -> Result<usize> {
+    let (fields, _, tickets) = parse_input(input)?;
+
+    let mut error_rate = 0;
+    for ticket in tickets {
+        error_rate += ticket.error_rate(&fields);
+    }
+    Ok(error_rate)
+}
+
+pub fn part2(input: String) -> Result<usize> {
+    let (fields, mine, nearby) = parse_input(input)?;
+
+    let indexes = solve_fields(&fields, &nearby)?;
+
+    Ok(
+        mine.0.into_iter().enumerate()
+            .map(|(i, val)| (fields[indexes[i]].name.as_str(), val))
+            .filter(|&(name, _val)| name.starts_with("departure"))
+            .map(|(_name, val)| val)
+            .product()
+    )
+}
+
+fn solve_fields(fields: &[Field], tickets: &[Ticket]) -> Result<Vec<usize>> {
+    let tickets: Vec<Ticket> = tickets.iter().cloned()
+        .filter(|t| t.error_rate(fields) == 0)
+        .collect();
+
+    let mut options: Vec<HashSet<usize>> = vec![(0..fields.len()).collect(); fields.len()];
+
+    for t in tickets {
+        for (idx, num) in t.0.into_iter().enumerate() {
+            for (field, options) in fields.iter().zip_eq(options.iter_mut()) {
+                if options.contains(&idx) {
+                    if !field.is_valid(num) {
+                        options.remove(&idx);
+                    }
+                }
+            }
+        }
+    }
+
+    println!("{:?}", options);
+
+    Ok(vec![])
+}
+
+fn parse_input(input: String) -> Result<(Vec<Field>, Ticket, Vec<Ticket>)> {
     let (fields, tickets) = strtools::split_once(input.trim(), "\n\n");
 
     let fields: Vec<Field> = fields.lines()
         .map(|l| Field::from_line(l))
         .collect::<Result<_, _>>()?;
 
-    let (_, tickets) = strtools::split_once(tickets, "\n\n");
-    let nums: Vec<usize> = tickets
+    let (mine, nearby) = strtools::split_once(tickets, "\n\n");
+    let mine = Ticket::from_line(
+        mine.lines()
+            .skip(1)
+            .exactly_one().map_err(|_| anyhow!("too many lines for my ticket"))?
+    )?;
+    let nearby: Vec<Ticket> = nearby
         .lines().skip(1)
-        .flat_map(|l| l.split(','))
-        .map(|n| n.trim().parse::<usize>())
+        .map(|n| Ticket::from_line(n.trim()))
         .collect::<Result<_, _>>()?;
 
-    let mut error_rate = 0;
-    for num in nums {
-        if !fields.iter().any(|f| f.is_valid(num)) {
-            error_rate += num;
-        }
+    Ok((fields, mine, nearby))
+}
+
+#[derive(Debug, Clone)]
+struct Ticket(Vec<usize>);
+
+impl Ticket {
+    fn from_line(line: &str) -> Result<Self> {
+        Ok(Self(line.split(',')
+            .map(|n| n.trim().parse::<usize>())
+            .collect::<Result<_, _>>()?))
     }
-    Ok(error_rate)
+
+    fn error_rate(&self, fields: &[Field]) -> usize {
+        let mut error_rate = 0;
+        for num in self.0.iter() {
+            if !fields.iter().any(|f| f.is_valid(*num)) {
+                error_rate += num;
+            }
+        }
+        error_rate
+    }
 }
 
-pub fn part2(_input: String) -> Result<usize> {
-    Ok(0)
-}
-
+#[derive(Debug, Clone)]
 struct Field {
     name: String,
     low: RangeInclusive<usize>,
@@ -47,8 +113,6 @@ impl Field {
     fn from_line(line: &str) -> Result<Self> {
         let (name, ranges) = strtools::split_once(line, ": ");
         let (low, high) = strtools::split_once(ranges, " or ");
-
-        println!("name={}, low={}, high={}", name, low, high);
 
         Ok(Self {
             name: name.to_string(),
@@ -83,5 +147,12 @@ nearby tickets:
     #[test]
     fn part1_example() {
         assert_eq!(71, part1(EXAMPLE.to_string()).unwrap());
+    }
+
+    #[test]
+    fn part2_example() {
+        let (fields, _, tickets) = parse_input(EXAMPLE.to_string()).unwrap();
+
+        assert_eq!(vec![1, 0, 2], solve_fields(&fields, &tickets).unwrap());
     }
 }
