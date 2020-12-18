@@ -10,7 +10,7 @@ pub fn part1(input: String) -> Result<usize> {
 
     let mut error_rate = 0;
     for ticket in tickets {
-        error_rate += ticket.error_rate(&fields);
+        error_rate += ticket.error_rate(&fields).unwrap_or(0);
     }
     Ok(error_rate)
 }
@@ -20,25 +20,45 @@ pub fn part2(input: String) -> Result<usize> {
 
     let indexes = solve_fields(&fields, &nearby)?;
 
-    Ok(
-        mine.0.into_iter().enumerate()
-            .map(|(i, val)| (fields[indexes[i]].name.as_str(), val))
-            .filter(|&(name, _val)| name.starts_with("departure"))
-            .map(|(_name, val)| val)
-            .product()
-    )
+    let vals: Vec<usize> = mine.0.into_iter().enumerate()
+        .map(|(i, val)| (fields[indexes[i]].name.as_str(), val))
+        .filter(|&(name, _val)| name.starts_with("departure"))
+        .map(|(_name, val)| val)
+        .collect();
+
+    Ok(vals.into_iter().product())
+}
+
+fn solve_single_field(options: &Vec<HashSet<usize>>) -> Option<(usize, usize)> {
+    for (col, options) in options.iter().enumerate() {
+        if let Ok(field) = options.iter().exactly_one() {
+            return Some((col, *field));
+        }
+    }
+
+    for field in 0..options.len() {
+        let cols = options.iter()
+            .enumerate()
+            .filter(|&(_col, options)| options.contains(&field))
+            .map(|(col, _options)| col);
+
+        if let Ok(col) = cols.exactly_one() {
+            return Some((col, field));
+        }
+    }
+    None
 }
 
 fn solve_fields(fields: &[Field], tickets: &[Ticket]) -> Result<Vec<usize>> {
     let tickets: Vec<Ticket> = tickets.iter().cloned()
-        .filter(|t| t.error_rate(fields) == 0)
+        .filter(|t| t.error_rate(fields).is_none())
         .collect();
 
     let mut options: Vec<HashSet<usize>> = vec![(0..fields.len()).collect(); fields.len()];
 
     for t in tickets {
-        for (idx, num) in t.0.into_iter().enumerate() {
-            for (field, options) in fields.iter().zip_eq(options.iter_mut()) {
+        for (num, options) in t.0.into_iter().zip_eq(options.iter_mut()) {
+            for (idx, field) in fields.iter().enumerate() {
                 if options.contains(&idx) {
                     if !field.is_valid(num) {
                         options.remove(&idx);
@@ -48,9 +68,20 @@ fn solve_fields(fields: &[Field], tickets: &[Ticket]) -> Result<Vec<usize>> {
         }
     }
 
-    println!("{:?}", options);
+    let mut result: Vec<usize> = vec![usize::MAX; fields.len()];
 
-    Ok(vec![])
+    while let Some((col, field)) = solve_single_field(&options) {
+        result[col] = field;
+        options[col].clear();
+        for options in options.iter_mut() {
+            options.remove(&field);
+        }
+    }
+
+    if result.iter().find(|&&field| field == usize::MAX).is_some() {
+        return Err(anyhow!("no solution for given fields"));
+    }
+    Ok(result)
 }
 
 fn parse_input(input: String) -> Result<(Vec<Field>, Ticket, Vec<Ticket>)> {
@@ -84,11 +115,11 @@ impl Ticket {
             .collect::<Result<_, _>>()?))
     }
 
-    fn error_rate(&self, fields: &[Field]) -> usize {
-        let mut error_rate = 0;
+    fn error_rate(&self, fields: &[Field]) -> Option<usize> {
+        let mut error_rate = None;
         for num in self.0.iter() {
             if !fields.iter().any(|f| f.is_valid(*num)) {
-                error_rate += num;
+                error_rate = Some(*num + error_rate.unwrap_or(0));
             }
         }
         error_rate
