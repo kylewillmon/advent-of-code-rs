@@ -20,6 +20,7 @@ mod day13;
 mod day14;
 mod day15;
 mod day16;
+mod day17;
 mod day18;
 mod day19;
 mod day21;
@@ -94,6 +95,9 @@ fn main() {
         .day(Day::new(16)
             .part(1, day16::part1)
             .part(2, day16::part2))
+        .day(Day::new(17)
+            .part(1, day17::part1)
+            .part(2, day17::part2))
         .day(Day::new(18)
             .part(1, day18::part1)
             .part(2, day18::part2))
