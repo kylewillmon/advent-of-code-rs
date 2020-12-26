@@ -1,6 +1,4 @@
-use std::collections::VecDeque;
-
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 
 pub fn part1(_: String) -> Result<String> {
     part1_answer("974618352")
@@ -10,26 +8,72 @@ pub fn part2(_: String) -> Result<u64> {
     part2_answer("974618352")
 }
 
-fn part1_cups(s: &str) -> VecDeque<u32> {
-    s.bytes().map(|c| c - b'0').map(|c| c.into()).collect()
+struct CupList {
+    cups: Vec<usize>,
+    head: usize,
+    tail: usize,
+    max: usize,
 }
 
-fn part2_cups(s: &str) -> VecDeque<u32> {
-    let mut cups = VecDeque::with_capacity(1_000_000);
+impl CupList {
+    fn with_size(size: usize) -> Self {
+        Self {
+            cups: vec![usize::MAX; size],
+            head: usize::MAX,
+            tail: usize::MAX,
+            max: 0,
+        }
+    }
+}
 
-    cups.append(&mut part1_cups(s));
+impl Extend<usize> for CupList {
+    fn extend<T: IntoIterator<Item=usize>>(&mut self, iter: T) {
+        let mut iter = iter.into_iter();
 
-    let next = (cups.len()+1) as u32;
+        if self.head == usize::MAX {
+            if let Some(num) = iter.next() {
+                self.head = num;
+                self.tail = num;
+                self.cups[num] = num;
+                self.max = num;
+            }
+        }
+
+        for num in iter {
+            self.cups[self.tail] = num;
+            self.tail = num;
+            if num > self.max {
+                self.max = num;
+            }
+        }
+        self.cups[self.tail] = self.head;
+    }
+}
+
+fn part1_cups(s: &str) -> CupList {
+    let mut cups = CupList::with_size(11);
+
     cups.extend(
-        next..=1_000_000
+        s.bytes().map(|c| c - b'0').map(|c| c.into())
     );
-
-    cups.shrink_to_fit();
 
     cups
 }
 
-fn play_crab_cups(mut cups: VecDeque<u32>, iterations: usize) -> VecDeque<u32> {
+fn part2_cups(s: &str) -> CupList {
+    let mut cups = CupList::with_size(1_000_001);
+
+    cups.extend(
+        s.bytes().map(|c| c - b'0').map(|c| c.into())
+    );
+
+    let next = s.bytes().count()+1;
+    cups.extend(next..=1_000_000);
+
+    cups
+}
+
+fn play_crab_cups(mut cups: CupList, iterations: usize) -> CupList {
     for _ in 0..iterations {
         make_move(&mut cups);
     }
@@ -38,22 +82,21 @@ fn play_crab_cups(mut cups: VecDeque<u32>, iterations: usize) -> VecDeque<u32> {
 }
 
 fn part1_answer(input: &str) -> Result<String> {
-    let mut cups = play_crab_cups(
+    let cups = play_crab_cups(
         part1_cups(input),
         100,
     );
-    let idx = cups.iter().cloned()
-        .position(|c| c == 1)
-        .ok_or(anyhow!("cup '1' not found"))?;
 
-    cups.rotate_left(idx+1);
-    cups.pop_back();
+    let mut idx = cups.cups[1];
+    let mut s = String::new();
 
-    Ok(
-        cups.into_iter()
-            .map(|cup| char::from((cup as u8) + b'0'))
-            .collect()
-    )
+    while idx != 1 {
+        let c = ((idx as u8) + b'0').into();
+        s.push(c);
+        idx = cups.cups[idx];
+    }
+
+    Ok(s)
 }
 
 fn part2_answer(input: &str) -> Result<u64> {
@@ -62,20 +105,13 @@ fn part2_answer(input: &str) -> Result<u64> {
         10_000_000,
     );
 
-    let idx = cups.iter().cloned()
-        .position(|c| c == 1)
-        .ok_or(anyhow!("cup '1' not found"))?;
+    let a = cups.cups[1];
+    let b = cups.cups[a];
 
-    let a = if idx + 1 == cups.len() { 0 } else { idx + 1 };
-    let b = if a + 1 == cups.len() { 0 } else { a + 1 };
-
-    let a = cups[a] as u64;
-    let b = cups[b] as u64;
-
-    Ok(a * b)
+    Ok((a as u64) * (b as u64))
 }
 
-fn destination_cup(cur: u32, max: u32, removed: &[u32]) -> u32 {
+fn destination_cup(cur: usize, max: usize, a: usize, b: usize, c: usize) -> usize {
     let dest = {
         if cur == 1 {
             max
@@ -84,30 +120,31 @@ fn destination_cup(cur: u32, max: u32, removed: &[u32]) -> u32 {
         }
     };
 
-    if removed.contains(&dest) {
-        destination_cup(dest, max, removed)
+    if a == dest || b == dest || c == dest {
+        destination_cup(dest, max, a, b, c)
     } else {
         dest
     }
 }
 
-fn make_move(cups: &mut VecDeque<u32>) {
-    let max = cups.len() as u32;
-    let cur = cups[0];
-    cups.rotate_left(1);
+fn make_move(cups: &mut CupList) {
+    let cur = cups.head;
 
-    let removed = vec![
-        cups.pop_front().unwrap(),
-        cups.pop_front().unwrap(),
-        cups.pop_front().unwrap(),
-    ];
+    let first_removed = cups.cups[cur];
+    let second_removed = cups.cups[first_removed];
+    let last_removed = cups.cups[second_removed];
 
-    let dest = destination_cup(cur, max, &removed);
-    let dest_idx = cups.iter().cloned().position(|cup| cup == dest).unwrap();
+    let next_head = cups.cups[last_removed];
 
-    for cup in removed.into_iter().rev() {
-        cups.insert(dest_idx+1, cup);
-    }
+    let dest = destination_cup(cur, cups.max, first_removed, second_removed, last_removed);
+    let dest_tail = cups.cups[dest];
+
+    cups.cups[cur] = next_head;
+    cups.cups[dest] = first_removed;
+    cups.cups[last_removed] = dest_tail;
+
+    cups.tail = cur;
+    cups.head = next_head;
 }
 
 #[cfg(test)]
@@ -120,7 +157,6 @@ mod test {
     }
 
     #[test]
-    #[ignore]
     fn part2_example() {
         assert_eq!(149245887792, part2_answer("389125467").unwrap());
     }
