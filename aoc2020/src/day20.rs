@@ -1,8 +1,9 @@
 use anyhow::{anyhow, ensure, Result};
+use aoclib::strtools;
 
 pub fn part1(input: String) -> Result<u64> {
-    let tiles: Vec<Tile> = input.split("\n\n")
-        .map(|t| Tile::from_input(t))
+    let tiles: Vec<PartialTile> = input.split("\n\n")
+        .map(|t| PartialTile::from_input(t))
         .collect::<Result<_, _>>()?;
 
     let mut corners = Vec::new();
@@ -22,47 +23,54 @@ pub fn part2(_input: String) -> Result<u64> {
     Ok(0)
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum Position {
+    Top,
+    Right,
+    Bottom,
+    Left,
+}
+
+struct Side {
+    /// The characters on the side when traversed clockwise.
+    side: String,
+    /// The side's position on the tile.
+    position: Position,
+}
+
+impl Side {
+    /// Determines if sides match with only rotation
+    fn matches(&self, other: &Self) -> bool {
+        self.side.bytes()
+            .rev()
+            .eq(
+                other.side.bytes()
+            )
+    }
+
+    /// Determines if sides match with rotation after one tile is flipped
+    fn matches_flipped(&self, other: &Self) -> bool {
+        self.side == other.side
+    }
+}
+
 #[derive(Debug, Clone)]
 struct Tile {
-    num: u64,
     side: usize,
     tile: Vec<char>,
 }
 
 impl Tile {
     fn from_input(input: &str) -> Result<Self> {
-        let mut lines = input.trim().lines();
-
-        let num = lines.next()
-            .and_then(|l| l.strip_prefix("Tile "))
-            .and_then(|l| l.strip_suffix(":"))
-            .ok_or(anyhow!("invalid tile header"))?
-            .parse::<u64>()?;
-
         let mut tile = Vec::new();
-        let side = lines.clone().count();
+        let side = input.trim().lines().count();
 
-        for line in lines {
+        for line in input.trim().lines() {
             ensure!(line.trim().chars().count() == side, "tile must be square");
             tile.extend(line.chars());
         }
 
-        Ok(Self { num, side, tile })
-    }
-
-    fn unmatchable_sides(&self, others: &[Self]) -> usize {
-        let mut unmatchable_sides = 0;
-        for side in self.get_sides().into_iter().take(4) {
-            let matchable = others.iter()
-                .filter(|oth| oth.num != self.num)
-                .any(|oth| {
-                    oth.get_sides().into_iter().any(|s| s == side)
-                });
-            if !matchable {
-                unmatchable_sides += 1;
-            }
-        }
-        unmatchable_sides
+        Ok(Self { side, tile })
     }
 
     fn get(&self, r: usize, c: usize) -> Option<char> {
@@ -73,54 +81,71 @@ impl Tile {
             .map(|&c| c)
     }
 
-    fn get_sides(&self) -> Vec<String> {
-        let mut sides = Vec::new();
+    fn get_side(&self, pos: Position) -> Side {
         let last = self.side-1;
-
-        sides.push(
-            (0..self.side)
+        let side: String = match pos {
+            Position::Top => (0..self.side)
                 .map(|c| self.get(0, c).unwrap())
-                .collect()
-        );
-        sides.push(
-            (0..self.side)
+                .collect(),
+            Position::Right => (0..self.side)
                 .map(|r| self.get(r, last).unwrap())
-                .collect()
-        );
-        sides.push(
-            (0..self.side).rev()
+                .collect(),
+            Position::Bottom => (0..self.side).rev()
                 .map(|c| self.get(last, c).unwrap())
-                .collect()
-        );
-        sides.push(
-            (0..self.side).rev()
+                .collect(),
+            Position::Left => (0..self.side).rev()
                 .map(|r| self.get(r, 0).unwrap())
-                .collect()
-        );
+                .collect(),
+        };
+        Side { side, position: pos }
+    }
 
-        // Flipped
-        sides.push(
-            (0..self.side)
-                .map(|r| self.get(r, 0).unwrap())
-                .collect()
-        );
-        sides.push(
-            (0..self.side)
-                .map(|c| self.get(last, c).unwrap())
-                .collect()
-        );
-        sides.push(
-            (0..self.side).rev()
-                .map(|r| self.get(r, last).unwrap())
-                .collect()
-        );
-        sides.push(
-            (0..self.side).rev()
-                .map(|c| self.get(0, c).unwrap())
-                .collect()
-        );
+    fn get_sides(&self) -> Vec<Side> {
+        let mut sides = Vec::new();
+
+        sides.push(self.get_side(Position::Top));
+        sides.push(self.get_side(Position::Right));
+        sides.push(self.get_side(Position::Bottom));
+        sides.push(self.get_side(Position::Left));
 
         sides
+    }
+}
+
+#[derive(Debug, Clone)]
+struct PartialTile {
+    num: u64,
+    tile: Tile,
+}
+
+impl PartialTile {
+    fn from_input(input: &str) -> Result<Self> {
+        let (title, tile) = strtools::split_once(input.trim(), "\n");
+
+        let num = title.strip_prefix("Tile ")
+            .and_then(|l| l.strip_suffix(":"))
+            .ok_or(anyhow!("invalid tile header"))?
+            .parse::<u64>()?;
+
+        let tile = Tile::from_input(tile)?;
+
+        Ok(Self { num, tile })
+    }
+
+    fn unmatchable_sides(&self, others: &[Self]) -> usize {
+        let mut unmatchable_sides = 0;
+        for side in self.tile.get_sides() {
+            let matchable = others.iter()
+                .filter(|oth| oth.num != self.num)
+                .any(|oth| {
+                    oth.tile.get_sides().into_iter()
+                        .any(|s| s.matches(&side) || s.matches_flipped(&side))
+                });
+            if !matchable {
+                unmatchable_sides += 1;
+            }
+        }
+        unmatchable_sides
     }
 }
 
