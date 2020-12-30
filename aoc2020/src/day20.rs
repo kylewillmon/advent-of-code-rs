@@ -1,18 +1,14 @@
 use anyhow::{anyhow, ensure, Result};
+use itertools::Itertools;
 use aoclib::strtools;
 
 pub fn part1(input: String) -> Result<u64> {
-    let tiles: Vec<PartialTile> = input.split("\n\n")
-        .map(|t| PartialTile::from_input(t))
-        .collect::<Result<_, _>>()?;
+    let tiles = parse_input(input)?;
 
-    let mut corners = Vec::new();
-    for t in tiles.iter() {
-        let unmatch = t.unmatchable_sides(&tiles);
-        if unmatch == 2 {
-            corners.push(t.num);
-        }
-    }
+    let corners: Vec<u64> = tiles.into_iter()
+        .filter(|t| t.is_corner())
+        .map(|t| t.num)
+        .collect();
 
     assert_eq!(4, corners.len());
 
@@ -21,6 +17,19 @@ pub fn part1(input: String) -> Result<u64> {
 
 pub fn part2(_input: String) -> Result<u64> {
     Ok(0)
+}
+
+fn parse_input(input: String) -> Result<Vec<PartialTile>> {
+    let mut tiles: Vec<PartialTile> = input.split("\n\n")
+        .map(|t| PartialTile::from_input(t))
+        .collect::<Result<_, _>>()?;
+
+    for i in 0..tiles.len() {
+        let matches = tiles[i].calc_matches(&tiles);
+        tiles[i].side_matches = matches;
+    }
+
+    Ok(tiles)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -115,6 +124,7 @@ impl Tile {
 #[derive(Debug, Clone)]
 struct PartialTile {
     num: u64,
+    side_matches: Vec<Option<u64>>,
     tile: Tile,
 }
 
@@ -129,23 +139,27 @@ impl PartialTile {
 
         let tile = Tile::from_input(tile)?;
 
-        Ok(Self { num, tile })
+        Ok(Self { num, side_matches: Vec::new(), tile })
     }
 
-    fn unmatchable_sides(&self, others: &[Self]) -> usize {
-        let mut unmatchable_sides = 0;
+    fn calc_matches(&self, others: &[Self]) -> Vec<Option<u64>> {
+        let mut side_matches = Vec::new();
         for side in self.tile.get_sides() {
-            let matchable = others.iter()
+            let matches = others.iter()
                 .filter(|oth| oth.num != self.num)
-                .any(|oth| {
+                .filter(|oth| {
                     oth.tile.get_sides().into_iter()
                         .any(|s| s.matches(&side) || s.matches_flipped(&side))
                 });
-            if !matchable {
-                unmatchable_sides += 1;
+            if let Ok(other) = matches.exactly_one() {
+                side_matches.push(Some(other.num))
             }
         }
-        unmatchable_sides
+        side_matches
+    }
+
+    fn is_corner(&self) -> bool {
+        self.side_matches.iter().filter(|s| s.is_some()).count() == 2
     }
 }
 
