@@ -1,11 +1,12 @@
 use anyhow::{anyhow, ensure, Result};
-use itertools::Itertools;
 use aoclib::strtools;
+use itertools::Itertools;
 
 pub fn part1(input: String) -> Result<u64> {
     let tiles = parse_input(input)?;
 
-    let corners: Vec<u64> = tiles.into_iter()
+    let corners: Vec<u64> = tiles
+        .into_iter()
         .filter(|t| t.is_corner())
         .map(|t| t.num)
         .collect();
@@ -20,7 +21,8 @@ pub fn part2(_input: String) -> Result<u64> {
 }
 
 fn parse_input(input: String) -> Result<Vec<PartialTile>> {
-    let mut tiles: Vec<PartialTile> = input.split("\n\n")
+    let mut tiles: Vec<PartialTile> = input
+        .split("\n\n")
         .map(|t| PartialTile::from_input(t))
         .collect::<Result<_, _>>()?;
 
@@ -43,18 +45,12 @@ enum Position {
 struct Side {
     /// The characters on the side when traversed clockwise.
     side: String,
-    /// The side's position on the tile.
-    position: Position,
 }
 
 impl Side {
     /// Determines if sides match with only rotation
     fn matches(&self, other: &Self) -> bool {
-        self.side.bytes()
-            .rev()
-            .eq(
-                other.side.bytes()
-            )
+        self.side.bytes().rev().eq(other.side.bytes())
     }
 
     /// Determines if sides match with rotation after one tile is flipped
@@ -91,22 +87,20 @@ impl Tile {
     }
 
     fn get_side(&self, pos: Position) -> Side {
-        let last = self.side-1;
+        let last = self.side - 1;
         let side: String = match pos {
-            Position::Top => (0..self.side)
-                .map(|c| self.get(0, c).unwrap())
-                .collect(),
-            Position::Right => (0..self.side)
-                .map(|r| self.get(r, last).unwrap())
-                .collect(),
-            Position::Bottom => (0..self.side).rev()
+            Position::Top => (0..self.side).map(|c| self.get(0, c).unwrap()).collect(),
+            Position::Right => (0..self.side).map(|r| self.get(r, last).unwrap()).collect(),
+            Position::Bottom => (0..self.side)
+                .rev()
                 .map(|c| self.get(last, c).unwrap())
                 .collect(),
-            Position::Left => (0..self.side).rev()
+            Position::Left => (0..self.side)
+                .rev()
                 .map(|r| self.get(r, 0).unwrap())
                 .collect(),
         };
-        Side { side, position: pos }
+        Side { side }
     }
 
     fn get_sides(&self) -> Vec<Side> {
@@ -132,23 +126,31 @@ impl PartialTile {
     fn from_input(input: &str) -> Result<Self> {
         let (title, tile) = strtools::split_once(input.trim(), "\n");
 
-        let num = title.strip_prefix("Tile ")
+        let num = title
+            .strip_prefix("Tile ")
             .and_then(|l| l.strip_suffix(":"))
             .ok_or(anyhow!("invalid tile header"))?
             .parse::<u64>()?;
 
         let tile = Tile::from_input(tile)?;
 
-        Ok(Self { num, side_matches: Vec::new(), tile })
+        Ok(Self {
+            num,
+            side_matches: Vec::new(),
+            tile,
+        })
     }
 
     fn calc_matches(&self, others: &[Self]) -> Vec<Option<u64>> {
         let mut side_matches = Vec::new();
         for side in self.tile.get_sides() {
-            let matches = others.iter()
+            let matches = others
+                .iter()
                 .filter(|oth| oth.num != self.num)
                 .filter(|oth| {
-                    oth.tile.get_sides().into_iter()
+                    oth.tile
+                        .get_sides()
+                        .into_iter()
                         .any(|s| s.matches(&side) || s.matches_flipped(&side))
                 });
             if let Ok(other) = matches.exactly_one() {
