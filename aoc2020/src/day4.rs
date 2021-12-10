@@ -1,11 +1,10 @@
+use std::collections::{HashMap, HashSet};
 use std::convert::Infallible;
 use std::str::FromStr;
-use std::collections::{HashSet, HashMap};
 
 struct Passport(HashMap<String, String>);
 
-fn is_num_between<T: AsRef<str>>(val: T, min: u32, max: u32) -> bool
-{
+fn is_num_between<T: AsRef<str>>(val: T, min: u32, max: u32) -> bool {
     val.as_ref()
         .parse::<u32>()
         .map(|num| min <= num && num <= max)
@@ -13,33 +12,28 @@ fn is_num_between<T: AsRef<str>>(val: T, min: u32, max: u32) -> bool
 }
 
 impl Passport {
-    fn validate_keys(&self) -> bool
-    {
-        let required_keys: HashSet<String> = [
-            "byr",
-            "iyr",
-            "eyr",
-            "hgt",
-            "hcl",
-            "ecl",
-            "pid",
-        ].iter().cloned().map(|s| s.to_string()).collect();
+    fn validate_keys(&self) -> bool {
+        let required_keys: HashSet<String> = ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
+            .iter()
+            .cloned()
+            .map(|s| s.to_string())
+            .collect();
 
         let keys: HashSet<String> = self.0.keys().cloned().collect();
 
         keys.is_superset(&required_keys)
     }
 
-    fn validate_num<T: AsRef<str>>(&self, key: T, min: u32, max: u32) -> bool
-    {
-        self.0.get(&String::from(key.as_ref()))
+    fn validate_num<T: AsRef<str>>(&self, key: T, min: u32, max: u32) -> bool {
+        self.0
+            .get(&String::from(key.as_ref()))
             .map(|val| is_num_between(val, min, max))
             .unwrap_or(false)
     }
 
-    fn validate_height(&self) -> bool
-    {
-        self.0.get(&"hgt".to_string())
+    fn validate_height(&self) -> bool {
+        self.0
+            .get(&"hgt".to_string())
             .map(|val| {
                 if let Some(val) = val.strip_suffix("in") {
                     return is_num_between(val, 59, 76);
@@ -52,54 +46,55 @@ impl Passport {
             .unwrap_or(false)
     }
 
-    fn validate_hair_color(&self) -> bool
-    {
-        self.0.get(&"hcl".to_string())
+    fn validate_hair_color(&self) -> bool {
+        self.0
+            .get(&"hcl".to_string())
             .map(|val| {
                 val.strip_prefix('#')
-                    .map(|hex| hex.chars().all(|c| ('0'..='9').contains(&c) || ('a'..='f').contains(&c)))
+                    .map(|hex| {
+                        hex.chars()
+                            .all(|c| ('0'..='9').contains(&c) || ('a'..='f').contains(&c))
+                    })
                     .unwrap_or(false)
             })
             .unwrap_or(false)
     }
 
-    fn validate_eye_color(&self) -> bool
-    {
-        self.0.get(&"ecl".to_string())
-            .map(|val|
-                match val.as_str() {
-                    "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth" => true,
-                    _ => false
-                }
-            )
+    fn validate_eye_color(&self) -> bool {
+        self.0
+            .get(&"ecl".to_string())
+            .map(|val| {
+                matches!(
+                    val.as_str(),
+                    "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth"
+                )
+            })
             .unwrap_or(false)
     }
 
-    fn validate_id(&self) -> bool
-    {
-        self.0.get(&"pid".to_string())
+    fn validate_id(&self) -> bool {
+        self.0
+            .get(&"pid".to_string())
             .map(|val| val.len() == 9 && val.chars().all(|c| c.is_ascii_digit()))
             .unwrap_or(false)
     }
 
-    fn validate(&self) -> bool
-    {
+    fn validate(&self) -> bool {
         self.validate_keys()
-        && self.validate_num("byr", 1920, 2002)
-        && self.validate_num("iyr", 2010, 2020)
-        && self.validate_num("eyr", 2020, 2030)
-        && self.validate_height()
-        && self.validate_hair_color()
-        && self.validate_eye_color()
-        && self.validate_id()
+            && self.validate_num("byr", 1920, 2002)
+            && self.validate_num("iyr", 2010, 2020)
+            && self.validate_num("eyr", 2020, 2030)
+            && self.validate_height()
+            && self.validate_hair_color()
+            && self.validate_eye_color()
+            && self.validate_id()
     }
 }
 
 impl FromStr for Passport {
     type Err = String;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err>
-    {
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut items = HashMap::new();
         for i in s.split_ascii_whitespace() {
             let mut split = i.splitn(2, ':');
@@ -113,8 +108,7 @@ impl FromStr for Passport {
     }
 }
 
-pub fn part1(input: String) -> Result<usize, Infallible>
-{
+pub fn part1(input: String) -> Result<usize, Infallible> {
     let entries = input.split("\n\n");
 
     let num = entries
@@ -124,8 +118,7 @@ pub fn part1(input: String) -> Result<usize, Infallible>
     Ok(num)
 }
 
-pub fn part2(input: String) -> Result<usize, Infallible>
-{
+pub fn part2(input: String) -> Result<usize, Infallible> {
     let entries = input.split("\n\n");
 
     let num = entries

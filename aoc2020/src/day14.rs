@@ -1,7 +1,7 @@
 use std::collections::HashMap;
-use std::str::FromStr;
-use std::num::ParseIntError;
 use std::convert::TryInto;
+use std::num::ParseIntError;
+use std::str::FromStr;
 
 use anyhow::{anyhow, Result};
 use aoclib::strtools;
@@ -21,7 +21,7 @@ pub fn part1(input: String) -> Result<u64> {
             let memtarget = target
                 .strip_prefix("mem[")
                 .and_then(|t| t.strip_suffix(']'))
-                .ok_or(anyhow!("invalid target: {}", target))
+                .ok_or_else(|| anyhow!("invalid target: {}", target))
                 .and_then(|l| Ok(l.parse::<u64>()?))?;
 
             let value = value.parse::<u64>()?;
@@ -46,7 +46,7 @@ pub fn part2(input: String) -> Result<u64> {
             let memtarget = target
                 .strip_prefix("mem[")
                 .and_then(|t| t.strip_suffix(']'))
-                .ok_or(anyhow!("invalid target: {}", target))
+                .ok_or_else(|| anyhow!("invalid target: {}", target))
                 .and_then(|l| Ok(l.parse::<u64>()?))?;
 
             let value = value.parse::<u64>()?;
@@ -153,11 +153,7 @@ impl FromStr for Mask {
             }
         }
 
-        Ok(Self {
-            xs,
-            ones,
-            zeros,
-        })
+        Ok(Self { xs, ones, zeros })
     }
 }
 

@@ -37,7 +37,7 @@ pub fn part2(input: String) -> Result<i32> {
         ferry = match action {
             'L' => ferry.turn_waypoint(value),
             'R' => ferry.turn_waypoint(-value),
-            'F' => ferry.to_waypoint(value),
+            'F' => ferry.go_to_waypoint(value),
             'N' => ferry.move_waypoint(NORTH * value),
             'E' => ferry.move_waypoint(EAST * value),
             'S' => ferry.move_waypoint(SOUTH * value),
@@ -51,9 +51,9 @@ pub fn part2(input: String) -> Result<i32> {
 }
 
 const NORTH: Coord = Coord::new(0, 1);
-const EAST:  Coord = Coord::new(1, 0);
+const EAST: Coord = Coord::new(1, 0);
 const SOUTH: Coord = Coord::new(0, -1);
-const WEST:  Coord = Coord::new(-1, 0);
+const WEST: Coord = Coord::new(-1, 0);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct Ferry {
@@ -116,7 +116,7 @@ impl Ferry {
         }
     }
 
-    fn to_waypoint(self, value: i32) -> Self {
+    fn go_to_waypoint(self, value: i32) -> Self {
         let translation = self.waypoint * value;
         self.move_ferry(translation)
     }

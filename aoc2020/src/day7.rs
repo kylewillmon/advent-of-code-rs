@@ -17,13 +17,11 @@ struct BagGraph {
 
 impl BagGraph {
     fn new() -> Self {
-        BagGraph {
-            bags: Vec::new(),
-        }
+        BagGraph { bags: Vec::new() }
     }
 
     fn add_bag(&mut self, name: String) -> BagIdx {
-        self.bags.push(Bag{
+        self.bags.push(Bag {
             name,
             must_contain: Vec::new(),
         });
@@ -37,7 +35,8 @@ impl BagGraph {
     fn find_bag(&self, name: String) -> Option<BagIdx> {
         self.bags
             .iter()
-            .enumerate().find(|(_, bag)| bag.name == name)
+            .enumerate()
+            .find(|(_, bag)| bag.name == name)
             .map(|(i, _)| BagIdx(i))
     }
 
@@ -58,7 +57,7 @@ impl BagGraph {
             }
 
             if next.is_empty() {
-                break
+                break;
             }
 
             all.extend(next.iter());
@@ -84,11 +83,11 @@ impl BagGraph {
                 return count;
             }
             for (idx, b) in self.bags.iter().enumerate() {
-                let inside: Option<Vec<u32>> = b.must_contain
+                let inside: Option<Vec<u32>> = b
+                    .must_contain
                     .iter()
-                    .map(|(c, i)| {
-                        costs[i.0].map(|inner_cost| c * (inner_cost+1))
-                    }).collect();
+                    .map(|(c, i)| costs[i.0].map(|inner_cost| c * (inner_cost + 1)))
+                    .collect();
 
                 if let Some(counts) = inside {
                     costs[idx] = Some(counts.iter().cloned().sum());
@@ -106,7 +105,9 @@ fn parse_input(input: String) -> Result<BagGraph, AocError> {
     for line in input.lines() {
         let mut split = line.splitn(2, " bags contain ");
         let bagname = split.next().unwrap();
-        let rule = split.next().ok_or(AocError::ParseError("invalid line".to_string()))?;
+        let rule = split
+            .next()
+            .ok_or_else(|| AocError::ParseError("invalid line".to_string()))?;
 
         let idx = bags.add_bag(bagname.to_string());
         index.insert(bagname.to_string(), idx);
@@ -120,8 +121,9 @@ fn parse_input(input: String) -> Result<BagGraph, AocError> {
             .map(|s| {
                 s.trim_end_matches('s')
                     .strip_suffix(" bag")
-                    .ok_or(AocError::ParseError("invalid contain".to_string()))
-            }).collect::<Result<Vec<&str>, AocError>>()?;
+                    .ok_or_else(|| AocError::ParseError("invalid contain".to_string()))
+            })
+            .collect::<Result<Vec<&str>, AocError>>()?;
 
         for contain in contains {
             if contain == "no other" {
@@ -129,8 +131,12 @@ fn parse_input(input: String) -> Result<BagGraph, AocError> {
             }
             let mut split = contain.splitn(2, ' ');
             let count = split.next().unwrap().parse::<u32>()?;
-            let inner_name = split.next().ok_or(AocError::ParseError("no inner bag".to_string()))?;
-            let inner_idx = index.get(inner_name).ok_or(AocError::ParseError("unknown contained bag".to_string()))?;
+            let inner_name = split
+                .next()
+                .ok_or_else(|| AocError::ParseError("no inner bag".to_string()))?;
+            let inner_idx = index
+                .get(inner_name)
+                .ok_or_else(|| AocError::ParseError("unknown contained bag".to_string()))?;
 
             bags.must_contain(idx, *inner_idx, count);
         }
@@ -140,7 +146,9 @@ fn parse_input(input: String) -> Result<BagGraph, AocError> {
 
 pub fn part1(input: String) -> Result<usize, AocError> {
     let bags = parse_input(input)?;
-    Ok(bags.can_contain(bags.find_bag("shiny gold".to_string()).unwrap()).len())
+    Ok(bags
+        .can_contain(bags.find_bag("shiny gold".to_string()).unwrap())
+        .len())
 }
 
 pub fn part2(input: String) -> Result<u32, AocError> {

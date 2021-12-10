@@ -1,4 +1,4 @@
-use std::collections::{VecDeque, HashMap};
+use std::collections::{HashMap, VecDeque};
 
 use anyhow::{anyhow, ensure, Result};
 use itertools::Itertools;
@@ -13,7 +13,8 @@ pub fn part2(input: String) -> Result<u64> {
 }
 
 fn part1_with_preamble_len(preamble_len: usize, input: String) -> Result<u64> {
-    let nums = input.lines()
+    let nums = input
+        .lines()
         .map(|l| l.parse())
         .collect::<Result<Vec<u64>, _>>()?;
     ensure!(nums.len() >= preamble_len, "input too short");
@@ -29,8 +30,10 @@ fn part1_with_preamble_len(preamble_len: usize, input: String) -> Result<u64> {
 }
 
 pub fn part2_with_preamble_len(preamble_len: usize, input: String) -> Result<u64> {
+    use std::cmp::Ordering;
     let target = part1_with_preamble_len(preamble_len, input.clone())?;
-    let nums = input.lines()
+    let nums = input
+        .lines()
         .map(|l| l.parse())
         .collect::<Result<Vec<u64>, _>>()?;
 
@@ -40,16 +43,20 @@ pub fn part2_with_preamble_len(preamble_len: usize, input: String) -> Result<u64
         ensure!(end <= nums.len(), "target sum not found");
         let range = &nums[start..end];
         let sum: u64 = range.iter().cloned().sum();
-        if sum == target {
-            if let MinMax(min, max) = range.iter().cloned().minmax() {
-                return Ok(min + max);
+        match sum.cmp(&target) {
+            Ordering::Equal => {
+                if let MinMax(min, max) = range.iter().cloned().minmax() {
+                    return Ok(min + max);
+                }
+                panic!("range found, but min/max failed");
             }
-            panic!("range found, but min/max failed");
-        } else if sum < target {
-            end += 1;
-        } else {
-            start += 1;
-            assert!(start <= end, "start crossed end!");
+            Ordering::Less => {
+                end += 1;
+            }
+            Ordering::Greater => {
+                start += 1;
+                assert!(start <= end, "start crossed end!");
+            }
         }
     }
 }
@@ -77,9 +84,7 @@ impl XmasState {
     }
 
     fn push(self, num: u64) -> Self {
-        self
-            ._pop_num()
-            ._push_num(num)
+        self._pop_num()._push_num(num)
     }
 
     fn _push_num(mut self, num: u64) -> Self {
@@ -138,7 +143,10 @@ mod test {
 
     #[test]
     fn part1_example() {
-        assert_eq!(127, part1_with_preamble_len(5, EXAMPLE.to_string()).unwrap());
+        assert_eq!(
+            127,
+            part1_with_preamble_len(5, EXAMPLE.to_string()).unwrap()
+        );
     }
 
     #[test]

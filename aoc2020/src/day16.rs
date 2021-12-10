@@ -1,9 +1,9 @@
-use std::ops::RangeInclusive;
 use std::collections::HashSet;
+use std::ops::RangeInclusive;
 
-use itertools::Itertools;
 use anyhow::{anyhow, Result};
 use aoclib::strtools;
+use itertools::Itertools;
 
 pub fn part1(input: String) -> Result<usize> {
     let (fields, _, tickets) = parse_input(input)?;
@@ -20,16 +20,18 @@ pub fn part2(input: String) -> Result<usize> {
 
     let indexes = solve_fields(&fields, &nearby)?;
 
-    let vals: Vec<usize> = mine.0.into_iter().enumerate()
+    let vals = mine
+        .0
+        .into_iter()
+        .enumerate()
         .map(|(i, val)| (fields[indexes[i]].name.as_str(), val))
         .filter(|&(name, _val)| name.starts_with("departure"))
-        .map(|(_name, val)| val)
-        .collect();
+        .map(|(_name, val)| val);
 
-    Ok(vals.into_iter().product())
+    Ok(vals.product())
 }
 
-fn solve_single_field(options: &Vec<HashSet<usize>>) -> Option<(usize, usize)> {
+fn solve_single_field(options: &[HashSet<usize>]) -> Option<(usize, usize)> {
     for (col, options) in options.iter().enumerate() {
         if let Ok(field) = options.iter().exactly_one() {
             return Some((col, *field));
@@ -37,7 +39,8 @@ fn solve_single_field(options: &Vec<HashSet<usize>>) -> Option<(usize, usize)> {
     }
 
     for field in 0..options.len() {
-        let cols = options.iter()
+        let cols = options
+            .iter()
             .enumerate()
             .filter(|&(_col, options)| options.contains(&field))
             .map(|(col, _options)| col);
@@ -50,7 +53,9 @@ fn solve_single_field(options: &Vec<HashSet<usize>>) -> Option<(usize, usize)> {
 }
 
 fn solve_fields(fields: &[Field], tickets: &[Ticket]) -> Result<Vec<usize>> {
-    let tickets: Vec<Ticket> = tickets.iter().cloned()
+    let tickets: Vec<Ticket> = tickets
+        .iter()
+        .cloned()
         .filter(|t| t.error_rate(fields).is_none())
         .collect();
 
@@ -85,7 +90,8 @@ fn solve_fields(fields: &[Field], tickets: &[Ticket]) -> Result<Vec<usize>> {
 fn parse_input(input: String) -> Result<(Vec<Field>, Ticket, Vec<Ticket>)> {
     let (fields, tickets) = strtools::split_once(input.trim(), "\n\n");
 
-    let fields: Vec<Field> = fields.lines()
+    let fields: Vec<Field> = fields
+        .lines()
         .map(Field::from_line)
         .collect::<Result<_, _>>()?;
 
@@ -93,10 +99,12 @@ fn parse_input(input: String) -> Result<(Vec<Field>, Ticket, Vec<Ticket>)> {
     let mine = Ticket::from_line(
         mine.lines()
             .skip(1)
-            .exactly_one().map_err(|_| anyhow!("too many lines for my ticket"))?
+            .exactly_one()
+            .map_err(|_| anyhow!("too many lines for my ticket"))?,
     )?;
     let nearby: Vec<Ticket> = nearby
-        .lines().skip(1)
+        .lines()
+        .skip(1)
         .map(|n| Ticket::from_line(n.trim()))
         .collect::<Result<_, _>>()?;
 
@@ -108,9 +116,11 @@ struct Ticket(Vec<usize>);
 
 impl Ticket {
     fn from_line(line: &str) -> Result<Self> {
-        Ok(Self(line.split(',')
-            .map(|n| n.trim().parse::<usize>())
-            .collect::<Result<_, _>>()?))
+        Ok(Self(
+            line.split(',')
+                .map(|n| n.trim().parse::<usize>())
+                .collect::<Result<_, _>>()?,
+        ))
     }
 
     fn error_rate(&self, fields: &[Field]) -> Option<usize> {
@@ -151,8 +161,7 @@ impl Field {
     }
 
     fn is_valid(&self, num: usize) -> bool {
-        self.low.contains(&num)
-        || self.high.contains(&num)
+        self.low.contains(&num) || self.high.contains(&num)
     }
 }
 

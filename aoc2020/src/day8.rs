@@ -1,5 +1,5 @@
-use std::str::FromStr;
 use std::iter::repeat;
+use std::str::FromStr;
 
 use super::error::AocError;
 
@@ -44,7 +44,7 @@ impl FromStr for Instruction {
         let opcode = split.next().unwrap();
         let val = split
             .next()
-            .ok_or(AocError::ParseError("no argument".to_string()))?
+            .ok_or_else(|| AocError::ParseError("no argument".to_string()))?
             .parse::<i32>()?;
 
         match opcode {
@@ -62,7 +62,8 @@ impl FromStr for Program {
     type Err = AocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let prog = s.lines()
+        let prog = s
+            .lines()
             .map(|line| line.parse::<Instruction>())
             .collect::<Result<Vec<Instruction>, AocError>>()?;
         Ok(Program(prog))
@@ -100,8 +101,8 @@ impl Program {
                 Instruction::Acc(v) => {
                     accumulator += v;
                     eip += 1;
-                },
-                Instruction::Jmp(v) => eip = eip.wrapping_add(v as usize)
+                }
+                Instruction::Jmp(v) => eip = eip.wrapping_add(v as usize),
             }
         }
     }

@@ -2,22 +2,17 @@ use anyhow::Result;
 use itertools::Itertools;
 
 pub fn part1(input: String) -> Result<usize> {
-    Ok(
-        input.lines()
-            .map(evaluate)
-            .sum()
-    )
+    Ok(input.lines().map(evaluate).sum())
 }
 
 pub fn part2(input: String) -> Result<usize> {
-    Ok(
-        input.lines()
-            .map(|l| {
-                let toks: Vec<Token> = Lexer::new(l).collect();
-                evaluate_with_precedence(&toks)
-            })
-            .sum()
-    )
+    Ok(input
+        .lines()
+        .map(|l| {
+            let toks: Vec<Token> = Lexer::new(l).collect();
+            evaluate_with_precedence(&toks)
+        })
+        .sum())
 }
 
 fn evaluate(expr: &str) -> usize {
@@ -37,23 +32,25 @@ fn evaluate_with_precedence(toks: &[Token]) -> usize {
         match t {
             Token::ParenOpen => {
                 if depth == 0 {
-                    start = Some(i+1);
+                    start = Some(i + 1);
                 }
                 depth += 1;
-            },
+            }
             Token::ParenClose => {
                 assert!(depth != 0);
                 depth -= 1;
                 if depth == 0 {
-                    flat_expr.push(
-                        Token::Number(
-                            evaluate_with_precedence(&toks[start.unwrap()..i])
-                        )
-                    );
+                    flat_expr.push(Token::Number(evaluate_with_precedence(
+                        &toks[start.unwrap()..i],
+                    )));
                     start = None;
                 }
-            },
-            _ => if depth == 0 { flat_expr.push(t) }
+            }
+            _ => {
+                if depth == 0 {
+                    flat_expr.push(t)
+                }
+            }
         }
     }
 
@@ -71,10 +68,11 @@ fn evaluate_with_precedence(toks: &[Token]) -> usize {
                     }
                 }
                 Some(Token::Number(num))
-            },
+            }
             _ => Some(tok),
         }
-    }).peekable();
+    })
+    .peekable();
 
     let iter = std::iter::from_fn(move || {
         let tok = iter.next()?;
@@ -88,7 +86,7 @@ fn evaluate_with_precedence(toks: &[Token]) -> usize {
                     }
                 }
                 Some(Token::Number(num))
-            },
+            }
             _ => Some(tok),
         }
     });
@@ -121,24 +119,22 @@ impl ExprStack {
     fn push(&mut self, tok: Token) {
         match tok {
             Token::ParenOpen | Token::OpMul | Token::OpAdd => self.0.push(tok),
-            Token::Number(val) => {
-                match self.peek() {
-                    None | Some(Token::ParenOpen) => self.0.push(Token::Number(val)),
-                    Some(Token::OpAdd) | Some(Token::OpMul) => {
-                        let op = self.0.pop().unwrap();
-                        let oth = match self.0.pop().unwrap() {
-                            Token::Number(oth) => oth,
-                            _ => panic!("invalid expr"),
-                        };
-                        let res = match op {
-                            Token::OpAdd => val + oth,
-                            Token::OpMul => val * oth,
-                            _ => unreachable!(),
-                        };
-                        self.0.push(Token::Number(res));
-                    },
-                    _ => panic!("invalid expr"),
+            Token::Number(val) => match self.peek() {
+                None | Some(Token::ParenOpen) => self.0.push(Token::Number(val)),
+                Some(Token::OpAdd) | Some(Token::OpMul) => {
+                    let op = self.0.pop().unwrap();
+                    let oth = match self.0.pop().unwrap() {
+                        Token::Number(oth) => oth,
+                        _ => panic!("invalid expr"),
+                    };
+                    let res = match op {
+                        Token::OpAdd => val + oth,
+                        Token::OpMul => val * oth,
+                        _ => unreachable!(),
+                    };
+                    self.0.push(Token::Number(res));
                 }
+                _ => panic!("invalid expr"),
             },
             Token::ParenClose => {
                 let val = match self.0.pop().unwrap() {
@@ -153,7 +149,7 @@ impl ExprStack {
 }
 
 struct Lexer<'a> {
-    expr: &'a str
+    expr: &'a str,
 }
 
 impl<'a> Lexer<'a> {
@@ -162,14 +158,16 @@ impl<'a> Lexer<'a> {
     }
 
     fn _next_token(&self) -> Option<(Token, usize)> {
-        let (start, c) = self.expr.char_indices()
-            .skip_while(|&(_, c)| c.is_whitespace())
-            .next()?;
+        let (start, c) = self
+            .expr
+            .char_indices()
+            .find(|&(_, c)| !c.is_whitespace())?;
 
         if c.is_digit(10) {
-            let end = (&self.expr[start..]).char_indices()
-                .skip_while(|&(_, c)| c.is_digit(10))
-                .next().map(|(i, _)| i+start)
+            let end = (&self.expr[start..])
+                .char_indices()
+                .find(|&(_, c)| !c.is_digit(10))
+                .map(|(i, _)| i + start)
                 .unwrap_or(self.expr.len());
 
             let num = self.expr[start..end].parse::<usize>().ok()?;
@@ -183,7 +181,7 @@ impl<'a> Lexer<'a> {
             ')' => Token::ParenClose,
             _ => return None,
         };
-        Some((tok, start+1))
+        Some((tok, start + 1))
     }
 }
 

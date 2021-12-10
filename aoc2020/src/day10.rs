@@ -50,7 +50,9 @@ pub fn part2(input: String) -> Result<usize> {
         let difference: usize = usize::try_from(joltage - adapter)?;
 
         ways.rotate_right(difference);
-        for i in 0..difference { ways[i] = 0; }
+        for way in ways.iter_mut().take(difference) {
+            *way = 0;
+        }
 
         let new_ways = ways.iter().sum();
         ways[0] = new_ways;

@@ -5,23 +5,24 @@ const MODULUS: u32 = 20201227;
 const BASE: u8 = 7;
 
 pub fn part1(input: String) -> Result<BigUint> {
-    let public_keys: Vec<BigUint> = input.lines()
+    let public_keys: Vec<BigUint> = input
+        .lines()
         .map(|l| l.trim().parse::<BigUint>())
         .collect::<Result<_, _>>()?;
 
-    let solved_key = find_private_key(&public_keys)
-        .ok_or(anyhow!("cannot find private key"))?;
+    let solved_key = find_private_key(&public_keys).ok_or(anyhow!("cannot find private key"))?;
 
-    Ok(
-        public_keys.into_iter()
-            .filter_map(|k| {
-                if k == solved_key.public_key {
-                    None
-                } else {
-                    Some(solved_key.encrypt(k))
-                }
-            }).next().unwrap()
-    )
+    Ok(public_keys
+        .into_iter()
+        .filter_map(|k| {
+            if k == solved_key.public_key {
+                None
+            } else {
+                Some(solved_key.encrypt(k))
+            }
+        })
+        .next()
+        .unwrap())
 }
 
 pub fn part2(_input: String) -> Result<BigUint> {
@@ -41,7 +42,7 @@ fn find_private_key(public_keys: &[BigUint]) -> Option<CryptoKey> {
         }
 
         exponent += 1u8;
-        public_key = (public_key * &BASE) % &MODULUS;
+        public_key = (public_key * BASE) % MODULUS;
     }
     None
 }
@@ -66,6 +67,9 @@ mod test {
 
     #[test]
     fn part1_example() {
-        assert_eq!(BigUint::from(14897079u32), part1(EXAMPLE.to_string()).unwrap());
+        assert_eq!(
+            BigUint::from(14897079u32),
+            part1(EXAMPLE.to_string()).unwrap()
+        );
     }
 }

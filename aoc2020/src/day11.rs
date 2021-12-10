@@ -25,15 +25,20 @@ pub fn part1(input: String) -> Result<usize> {
             } else {
                 s
             }
-        }
+        },
     );
     Ok(grid.iter().filter(|&&s| s == Space::TakenSeat).count())
 }
 
 const NEIGHBORS: [(isize, isize); 8] = [
-    (-1, -1), (-1, 0), (-1, 1),
-    ( 0, -1),          ( 0, 1),
-    ( 1, -1), ( 1, 0), ( 1, 1),
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+    (0, -1),
+    (0, 1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
 ];
 
 pub fn part2(input: String) -> Result<usize> {
@@ -96,7 +101,9 @@ enum Space {
 }
 
 impl Default for Space {
-    fn default() -> Self { Space::Floor }
+    fn default() -> Self {
+        Space::Floor
+    }
 }
 
 impl TryFrom<char> for Space {
@@ -123,12 +130,20 @@ fn _neighbors(pos: (usize, usize), grid_size: (usize, usize)) -> Vec<(usize, usi
     let up = if pos.0 == 0 { None } else { Some(pos.0 - 1) };
     let down = {
         let down = pos.0 + 1;
-        if down == grid_size.0 { None } else { Some(down) }
+        if down == grid_size.0 {
+            None
+        } else {
+            Some(down)
+        }
     };
     let left = if pos.1 == 0 { None } else { Some(pos.1 - 1) };
     let right = {
         let right = pos.1 + 1;
-        if right == grid_size.1 { None } else { Some(right) }
+        if right == grid_size.1 {
+            None
+        } else {
+            Some(right)
+        }
     };
 
     vec![
@@ -140,9 +155,10 @@ fn _neighbors(pos: (usize, usize), grid_size: (usize, usize)) -> Vec<(usize, usi
         down.and_then(|down| left.map(|left| (down, left))),
         down.map(|down| (down, pos.1)),
         down.and_then(|down| right.map(|right| (down, right))),
-    ].into_iter()
-        .flatten()
-        .collect()
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
 }
 
 fn run_simulation<F, G>(mut grid: Grid<Space>, filter: F, translate: G) -> Grid<Space>
@@ -175,17 +191,9 @@ where
 
 impl<T: Eq + Clone + Default> Grid<T> {
     fn from_vec(grid: Vec<T>, rows: usize) -> Self {
-        let cols = if rows == 0 {
-            0
-        } else {
-            grid.len() / rows
-        };
+        let cols = if rows == 0 { 0 } else { grid.len() / rows };
         assert_eq!(grid.len(), cols * rows);
-        Grid {
-            grid,
-            rows,
-            cols,
-        }
+        Grid { grid, rows, cols }
     }
 
     fn with_size(rows: usize, cols: usize) -> Self {
@@ -231,7 +239,7 @@ impl<T: Eq + Clone + Default> Grid<T> {
         self.grid.get_mut(idx)
     }
 
-    fn _as_mut_slices(&mut self) -> Vec<&mut[T]> {
+    fn _as_mut_slices(&mut self) -> Vec<&mut [T]> {
         self.grid.as_mut_slice().chunks_mut(self.cols).collect()
     }
 
@@ -239,29 +247,36 @@ impl<T: Eq + Clone + Default> Grid<T> {
         self.grid.as_slice().chunks(self.cols).collect()
     }
 
-    fn iter<'a>(&'a self) -> impl Iterator<Item=&T> + 'a {
+    fn iter<'a>(&'a self) -> impl Iterator<Item = &T> + 'a {
         self.grid.iter()
     }
 }
 
 impl<T: Eq + Clone + Default + TryFrom<char>> FromStr for Grid<T>
 where
-    <T as TryFrom<char>>::Error: Into<AocError>
+    <T as TryFrom<char>>::Error: Into<AocError>,
 {
     type Err = AocError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut v: Vec<T> = Vec::new();
         let rows = s.lines().count();
-        let cols = s.lines().next()
+        let cols = s
+            .lines()
+            .next()
             .map(|l| l.chars().count())
-            .ok_or(AocError::ParseError("grid cannot have 0 rows".to_string()))?;
+            .ok_or_else(|| AocError::ParseError("grid cannot have 0 rows".to_string()))?;
         for row in s.lines() {
             if cols != row.chars().count() {
-                return Err(AocError::ParseError("each row must have the same number of columns".to_string()));
+                return Err(AocError::ParseError(
+                    "each row must have the same number of columns".to_string(),
+                ));
             }
 
-            let items = row.chars().map(|c| T::try_from(c)).collect::<Result<Vec<T>, _>>();
+            let items = row
+                .chars()
+                .map(|c| T::try_from(c))
+                .collect::<Result<Vec<T>, _>>();
             match items {
                 Ok(mut items) => v.append(&mut items),
                 Err(e) => return Err(e.into()),
