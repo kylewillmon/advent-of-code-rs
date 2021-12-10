@@ -4,7 +4,7 @@ use itertools::Itertools;
 pub fn part1(input: String) -> Result<usize> {
     Ok(
         input.lines()
-            .map(|l| evaluate(l))
+            .map(evaluate)
             .sum()
     )
 }
@@ -21,9 +21,9 @@ pub fn part2(input: String) -> Result<usize> {
 }
 
 fn evaluate(expr: &str) -> usize {
-    let mut lex = Lexer::new(expr);
+    let lex = Lexer::new(expr);
     let mut stack = ExprStack::new();
-    while let Some(tok) = lex.next() {
+    for tok in lex {
         stack.push(tok);
     }
     stack.value()
@@ -107,7 +107,7 @@ impl ExprStack {
     }
 
     fn peek(&self) -> Option<Token> {
-        self.0.last().map(|t| t.clone())
+        self.0.last().cloned()
     }
 
     fn value(self) -> usize {

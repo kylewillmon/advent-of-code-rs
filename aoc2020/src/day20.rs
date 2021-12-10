@@ -82,8 +82,7 @@ impl Tile {
         self.tile
             .chunks_exact(self.side)
             .nth(r)
-            .and_then(|row| row.get(c))
-            .map(|&c| c)
+            .and_then(|row| row.get(c)).copied()
     }
 
     fn get_side(&self, pos: Position) -> Side {
@@ -126,7 +125,7 @@ impl PartialTile {
 
         let num = title
             .strip_prefix("Tile ")
-            .and_then(|l| l.strip_suffix(":"))
+            .and_then(|l| l.strip_suffix(':'))
             .ok_or(anyhow!("invalid tile header"))?
             .parse::<u64>()?;
 

@@ -6,7 +6,7 @@ use itertools::Itertools;
 
 pub fn part1(input: String) -> Result<usize> {
     let recipes: Vec<Recipe<'_>> = input.lines()
-        .map(|l| Recipe::from_line(l))
+        .map(Recipe::from_line)
         .collect();
 
     let all_allergens: HashSet<&str> = recipes.iter()
@@ -39,7 +39,7 @@ pub fn part1(input: String) -> Result<usize> {
 
 pub fn part2(input: String) -> Result<String> {
     let recipes: Vec<Recipe<'_>> = input.lines()
-        .map(|l| Recipe::from_line(l))
+        .map(Recipe::from_line)
         .collect();
 
     let all_allergens: HashSet<&str> = recipes.iter()
@@ -74,8 +74,8 @@ pub fn part2(input: String) -> Result<String> {
 
     let mut decoded: Vec<(&str, &str)> = ingredients.into_iter()
         .filter_map(|(i, a)| {
-            assert!(a.len() == 0 || a.len() == 1);
-            a.into_iter().nth(0).map(|a| (i, a))
+            assert!(a.is_empty() || a.len() == 1);
+            a.into_iter().next().map(|a| (i, a))
         })
         .collect();
     decoded.sort_by_key(|v| v.1);

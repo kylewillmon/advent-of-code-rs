@@ -46,11 +46,11 @@ pub fn part2(input: String) -> Result<usize> {
 
 fn _build_regex_str(map: &HashMap<&str, &str>, rule: &str) -> String {
     let rule = map.get(rule).expect("rule not found!");
-    if let Some(c) = rule.strip_prefix('"').and_then(|r| r.chars().nth(0)) {
+    if let Some(c) = rule.strip_prefix('"').and_then(|r| r.chars().next()) {
         return c.to_string();
     }
 
-    let regex: Vec<String> = rule.split("|").map(|chain| {
+    let regex: Vec<String> = rule.split('|').map(|chain| {
         let mut regex = String::from("");
         let chain = chain.trim();
         for rule in chain.split(' ') {
@@ -61,7 +61,7 @@ fn _build_regex_str(map: &HashMap<&str, &str>, rule: &str) -> String {
     }).collect();
 
     if regex.len() == 1 {
-        regex.into_iter().nth(0).unwrap()
+        regex.into_iter().next().unwrap()
     } else {
         format!("({})", regex.into_iter().join("|"))
     }
@@ -77,7 +77,7 @@ fn build_regex(input: &str, root: &str) -> String {
         map.insert(name, rule);
     }
 
-    return _build_regex_str(&map, root);
+    _build_regex_str(&map, root)
 }
 
 #[cfg(test)]

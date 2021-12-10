@@ -59,10 +59,8 @@ fn solve_fields(fields: &[Field], tickets: &[Ticket]) -> Result<Vec<usize>> {
     for t in tickets {
         for (num, options) in t.0.into_iter().zip_eq(options.iter_mut()) {
             for (idx, field) in fields.iter().enumerate() {
-                if options.contains(&idx) {
-                    if !field.is_valid(num) {
-                        options.remove(&idx);
-                    }
+                if options.contains(&idx) && !field.is_valid(num) {
+                    options.remove(&idx);
                 }
             }
         }
@@ -78,7 +76,7 @@ fn solve_fields(fields: &[Field], tickets: &[Ticket]) -> Result<Vec<usize>> {
         }
     }
 
-    if result.iter().find(|&&field| field == usize::MAX).is_some() {
+    if result.iter().any(|&field| field == usize::MAX) {
         return Err(anyhow!("no solution for given fields"));
     }
     Ok(result)
@@ -88,7 +86,7 @@ fn parse_input(input: String) -> Result<(Vec<Field>, Ticket, Vec<Ticket>)> {
     let (fields, tickets) = strtools::split_once(input.trim(), "\n\n");
 
     let fields: Vec<Field> = fields.lines()
-        .map(|l| Field::from_line(l))
+        .map(Field::from_line)
         .collect::<Result<_, _>>()?;
 
     let (mine, nearby) = strtools::split_once(tickets, "\n\n");

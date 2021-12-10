@@ -20,7 +20,7 @@ pub fn part1(input: String) -> Result<u64> {
         } else {
             let memtarget = target
                 .strip_prefix("mem[")
-                .and_then(|t| t.strip_suffix("]"))
+                .and_then(|t| t.strip_suffix(']'))
                 .ok_or(anyhow!("invalid target: {}", target))
                 .and_then(|l| Ok(l.parse::<u64>()?))?;
 
@@ -45,7 +45,7 @@ pub fn part2(input: String) -> Result<u64> {
         } else {
             let memtarget = target
                 .strip_prefix("mem[")
-                .and_then(|t| t.strip_suffix("]"))
+                .and_then(|t| t.strip_suffix(']'))
                 .ok_or(anyhow!("invalid target: {}", target))
                 .and_then(|l| Ok(l.parse::<u64>()?))?;
 

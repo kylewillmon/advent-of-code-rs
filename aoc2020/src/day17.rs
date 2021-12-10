@@ -170,7 +170,7 @@ impl Grid {
         }
 
         // Remove the cube at point 'p' fromt the count
-        if let Some(Cube::Active) = self.get(&p) {
+        if let Some(Cube::Active) = self.get(p) {
             count - 1
         } else {
             count
@@ -181,7 +181,7 @@ impl Grid {
         let (a, b) = _normalize_points(a, b);
         let size = Point::new(b.x - a.x + 1, b.y - a.y + 1, b.z - a.z + 1);
         let grid = vec![Cube::Inactive; (size.x * size.y * size.z).try_into().unwrap()];
-        assert!(grid.len() != 0);
+        assert!(!grid.is_empty());
         Self {
             grid,
             size,
@@ -191,7 +191,7 @@ impl Grid {
 
     fn from_input(input: &str) -> Self {
         let height = input.lines().count();
-        let width = input.lines().nth(0).unwrap().trim().chars().count();
+        let width = input.lines().next().unwrap().trim().chars().count();
 
         let mut grid = Grid::from_points(
             &Point::zero(),
@@ -223,8 +223,7 @@ impl Grid {
             .nth(p.x.try_into().ok()?)?
             .chunks_exact(self.size.z.try_into().unwrap())
             .nth(p.y.try_into().ok()?)?
-            .get(usize::try_from(p.z).ok()?)
-            .map(|&c| c)
+            .get(usize::try_from(p.z).ok()?).copied()
     }
 
     fn get_mut(&mut self, p: &Point) -> Option<&mut Cube> {

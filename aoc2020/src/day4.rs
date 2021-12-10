@@ -56,8 +56,8 @@ impl Passport {
     {
         self.0.get(&"hcl".to_string())
             .map(|val| {
-                val.strip_prefix("#")
-                    .map(|hex| hex.chars().all(|c| c >= '0' && c <= '9' || c >= 'a' && c <= 'f'))
+                val.strip_prefix('#')
+                    .map(|hex| hex.chars().all(|c| ('0'..='9').contains(&c) || ('a'..='f').contains(&c)))
                     .unwrap_or(false)
             })
             .unwrap_or(false)

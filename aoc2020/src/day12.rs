@@ -7,7 +7,7 @@ pub fn part1(input: String) -> Result<i32> {
 
     for instruction in input.lines() {
         let (action, value) = instruction.split_at(1);
-        let action = action.chars().nth(0).unwrap();
+        let action = action.chars().next().unwrap();
         let value = value.parse::<i32>()?;
 
         ferry = match action {
@@ -31,7 +31,7 @@ pub fn part2(input: String) -> Result<i32> {
 
     for instruction in input.lines() {
         let (action, value) = instruction.split_at(1);
-        let action = action.chars().nth(0).unwrap();
+        let action = action.chars().next().unwrap();
         let value = value.parse::<i32>()?;
 
         ferry = match action {

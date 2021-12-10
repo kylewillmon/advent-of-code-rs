@@ -30,7 +30,7 @@ impl FromStr for CustomsForm {
             let mut person: [bool; 26] = [false; 26];
 
             for letter in line.bytes() {
-                if letter < b'a' || letter > b'z' {
+                if !(b'a'..=b'z').contains(&letter) {
                     return Err(AocError::ParseError("invalid character in customs form".into()))
                 }
                 person[(letter-b'a') as usize] = true;

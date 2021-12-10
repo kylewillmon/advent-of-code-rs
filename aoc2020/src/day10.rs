@@ -7,7 +7,7 @@ use super::parse::to_nums;
 pub fn part1(input: String) -> Result<usize> {
     let adapters = {
         let mut a = to_nums(input);
-        a.sort();
+        a.sort_unstable();
         a
     };
 
@@ -33,7 +33,7 @@ pub fn part1(input: String) -> Result<usize> {
 pub fn part2(input: String) -> Result<usize> {
     let adapters = {
         let mut a = to_nums(input);
-        a.sort();
+        a.sort_unstable();
         a.reverse();
 
         a.push(0);

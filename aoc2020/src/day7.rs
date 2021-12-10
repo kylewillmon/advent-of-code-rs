@@ -37,9 +37,7 @@ impl BagGraph {
     fn find_bag(&self, name: String) -> Option<BagIdx> {
         self.bags
             .iter()
-            .enumerate()
-            .filter(|(_, bag)| bag.name == name)
-            .next()
+            .enumerate().find(|(_, bag)| bag.name == name)
             .map(|(i, _)| BagIdx(i))
     }
 
@@ -52,14 +50,14 @@ impl BagGraph {
 
             for (idx, b) in self.bags.iter().enumerate() {
                 for inner in b.must_contain.iter() {
-                    let contains = cur.iter().filter(|c| **c == inner.1).next().is_some();
+                    let contains = cur.iter().any(|c| *c == inner.1);
                     if contains {
                         next.push(BagIdx(idx))
                     }
                 }
             }
 
-            if next.len() == 0 {
+            if next.is_empty() {
                 break
             }
 
@@ -76,7 +74,7 @@ impl BagGraph {
         let mut costs: Vec<Option<u32>> = repeat(None).take(self.bags.len()).collect();
 
         for (idx, b) in self.bags.iter().enumerate() {
-            if b.must_contain.len() == 0 {
+            if b.must_contain.is_empty() {
                 costs[idx] = Some(0);
             }
         }
@@ -129,7 +127,7 @@ fn parse_input(input: String) -> Result<BagGraph, AocError> {
             if contain == "no other" {
                 continue;
             }
-            let mut split = contain.splitn(2, " ");
+            let mut split = contain.splitn(2, ' ');
             let count = split.next().unwrap().parse::<u32>()?;
             let inner_name = split.next().ok_or(AocError::ParseError("no inner bag".to_string()))?;
             let inner_idx = index.get(inner_name).ok_or(AocError::ParseError("unknown contained bag".to_string()))?;

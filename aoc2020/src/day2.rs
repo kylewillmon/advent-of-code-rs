@@ -60,9 +60,9 @@ impl FromStr for PasswordPolicy {
 
     fn from_str(s: &str) -> Result<Self, Self::Err>
     {
-        let parts : Vec<&str> = s.splitn(2, " ").collect();
-        let times : Vec<&str> = parts[0].splitn(2, "-").collect();
-        let letter = parts[1].chars().nth(0).ok_or("no letter provided")?;
+        let parts : Vec<&str> = s.splitn(2, ' ').collect();
+        let times : Vec<&str> = parts[0].splitn(2, '-').collect();
+        let letter = parts[1].chars().next().ok_or("no letter provided")?;
         let min = times[0].parse::<u16>().map_err(|e| format!("{}", e))?;
         let max = times[1].parse::<u16>().map_err(|e| format!("{}", e))?;
 

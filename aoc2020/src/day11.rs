@@ -82,7 +82,7 @@ pub fn part2(input: String) -> Result<usize> {
                 *next.get_mut((r, c)).unwrap() = new_space;
             }
         }
-        let tmp = cur; cur = next; next = tmp;
+        std::mem::swap(&mut cur, &mut next);
     }
 
     Ok(grid.iter().filter(|&&s| s == Space::TakenSeat).count())
@@ -133,16 +133,15 @@ fn _neighbors(pos: (usize, usize), grid_size: (usize, usize)) -> Vec<(usize, usi
 
     vec![
         up.and_then(|up| left.map(|left| (up, left))),
-        up.and_then(|up| Some((up, pos.1))),
+        up.map(|up| (up, pos.1)),
         up.and_then(|up| right.map(|right| (up, right))),
-        left.and_then(|left| Some((pos.0, left))),
-        right.and_then(|right| Some((pos.0, right))),
+        left.map(|left| (pos.0, left)),
+        right.map(|right| (pos.0, right)),
         down.and_then(|down| left.map(|left| (down, left))),
-        down.and_then(|down| Some((down, pos.1))),
+        down.map(|down| (down, pos.1)),
         down.and_then(|down| right.map(|right| (down, right))),
     ].into_iter()
-        .filter(|p| p.is_some())
-        .map(|p| p.unwrap())
+        .flatten()
         .collect()
 }
 
@@ -168,7 +167,7 @@ where
                 *next.get_mut((r, c)).unwrap() = translate(count, cur.get((r, c)).unwrap());
             }
         }
-        let tmp = cur; cur = next; next = tmp;
+        std::mem::swap(&mut cur, &mut next);
     }
 
     grid
@@ -254,8 +253,7 @@ where
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut v: Vec<T> = Vec::new();
         let rows = s.lines().count();
-        let cols = s.lines()
-            .nth(0)
+        let cols = s.lines().next()
             .map(|l| l.chars().count())
             .ok_or(AocError::ParseError("grid cannot have 0 rows".to_string()))?;
         for row in s.lines() {

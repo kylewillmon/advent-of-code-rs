@@ -20,8 +20,7 @@ pub fn part1(input: String) -> Result<BigUint> {
                 } else {
                     Some(solved_key.encrypt(k))
                 }
-            })
-            .nth(0).unwrap()
+            }).next().unwrap()
     )
 }
 
