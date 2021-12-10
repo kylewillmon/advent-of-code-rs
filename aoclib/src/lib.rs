@@ -1,5 +1,5 @@
-mod solver;
 mod day;
+mod solver;
 pub mod strtools;
 
 pub use day::Day;
@@ -10,13 +10,12 @@ pub struct AOC<'a> {
 
 impl<'a> AOC<'a> {
     pub fn new() -> Self {
-        AOC {
-            days: Vec::new(),
-        }
+        AOC { days: Vec::new() }
     }
 
     pub fn day<'b>(mut self, d: day::Day<'b>) -> Self
-        where 'b: 'a
+    where
+        'b: 'a,
     {
         self.days.push(d);
         self
@@ -31,7 +30,13 @@ impl<'a> AOC<'a> {
 
         match d {
             Some(d) => d.solve(input),
-            None => "Error: Day not found".to_string()
+            None => "Error: Day not found".to_string(),
         }
+    }
+}
+
+impl<'a> Default for AOC<'a> {
+    fn default() -> Self {
+        Self::new()
     }
 }

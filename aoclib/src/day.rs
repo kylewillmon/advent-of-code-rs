@@ -1,7 +1,5 @@
 use std::fmt::Write;
 
-use anyhow;
-
 use super::solver;
 
 pub struct Day<'a> {
@@ -10,8 +8,7 @@ pub struct Day<'a> {
 }
 
 impl<'a> Day<'a> {
-    pub fn new(day: u8) -> Self
-    {
+    pub fn new(day: u8) -> Self {
         Day {
             day,
             parts: Vec::new(),
@@ -19,7 +16,8 @@ impl<'a> Day<'a> {
     }
 
     pub fn part<F>(mut self, part: u8, solver: F) -> Self
-        where F: 'a + solver::Solver
+    where
+        F: 'a + solver::Solver,
     {
         self.parts.push(Part::new(part, solver));
         self
@@ -46,7 +44,8 @@ struct Part<'a> {
 
 impl<'a> Part<'a> {
     fn new<F>(part: u8, solver: F) -> Self
-        where F: 'a + solver::Solver
+    where
+        F: 'a + solver::Solver,
     {
         Part {
             part,
