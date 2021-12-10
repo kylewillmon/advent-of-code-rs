@@ -1,9 +1,9 @@
+use std::collections::{HashMap, HashSet};
+use std::convert::{TryFrom, TryInto};
 use std::ops::{Add, Sub};
-use std::convert::{TryInto, TryFrom};
-use std::collections::{HashSet, HashMap};
 
-use itertools::Itertools;
 use anyhow::Result;
+use itertools::Itertools;
 
 pub fn part1(input: String) -> Result<usize> {
     let mut grid = Grid::from_input(input.as_str());
@@ -12,12 +12,11 @@ pub fn part1(input: String) -> Result<usize> {
         grid = grid.run_cycle();
     }
 
-    Ok(
-        grid.visit()
-            .map(|(_, c)| c)
-            .filter(|&c| c == Cube::Active)
-            .count()
-    )
+    Ok(grid
+        .visit()
+        .map(|(_, c)| c)
+        .filter(|&c| c == Cube::Active)
+        .count())
 }
 
 pub fn part2(input: String) -> Result<usize> {
@@ -40,7 +39,7 @@ struct Hypercube {
 
 impl Hypercube {
     fn new(x: isize, y: isize, z: isize, w: isize) -> Self {
-        Self{ x, y, z, w }
+        Self { x, y, z, w }
     }
 
     fn coords(&self) -> (isize, isize, isize, isize) {
@@ -76,7 +75,8 @@ impl Hypergrid {
 
         for cube in self.0.iter().cloned() {
             for c in cube.neighbors() {
-                neighbor_count.entry(c)
+                neighbor_count
+                    .entry(c)
                     .and_modify(|count| *count += 1)
                     .or_insert(1);
             }
@@ -128,10 +128,7 @@ fn _normalize_points(a: &Point, b: &Point) -> (Point, Point) {
     let (xmin, xmax) = _minmax(a.x, b.x);
     let (ymin, ymax) = _minmax(a.y, b.y);
     let (zmin, zmax) = _minmax(a.z, b.z);
-    (
-        Point::new(xmin, ymin, zmin),
-        Point::new(xmax, ymax, zmax),
-    )
+    (Point::new(xmin, ymin, zmin), Point::new(xmax, ymax, zmax))
 }
 
 impl Grid {
@@ -148,9 +145,9 @@ impl Grid {
             let neighbors = self.active_neighbors(&p);
             let cube = self.get(&p).unwrap_or(Cube::Inactive);
 
-            if cube == Cube::Active && neighbors >= 2 && neighbors <= 3 {
-                *next.get_mut(&p).unwrap() = Cube::Active;
-            } else if cube == Cube::Inactive && neighbors == 3 {
+            if (cube == Cube::Active && neighbors >= 2 && neighbors <= 3)
+                || (cube == Cube::Inactive && neighbors == 3)
+            {
                 *next.get_mut(&p).unwrap() = Cube::Active;
             }
         }
@@ -182,12 +179,8 @@ impl Grid {
 
     fn from_points(a: &Point, b: &Point) -> Self {
         let (a, b) = _normalize_points(a, b);
-        let size = Point::new(
-            b.x - a.x + 1,
-            b.y - a.y + 1,
-            b.z - a.z + 1,
-        );
-        let grid = vec![Cube::Inactive; (size.x*size.y*size.z).try_into().unwrap()];
+        let size = Point::new(b.x - a.x + 1, b.y - a.y + 1, b.z - a.z + 1);
+        let grid = vec![Cube::Inactive; (size.x * size.y * size.z).try_into().unwrap()];
         assert!(grid.len() != 0);
         Self {
             grid,
@@ -200,7 +193,10 @@ impl Grid {
         let height = input.lines().count();
         let width = input.lines().nth(0).unwrap().trim().chars().count();
 
-        let mut grid = Grid::from_points(&Point::zero(), &Point::new(height.try_into().unwrap(), width.try_into().unwrap(), 0));
+        let mut grid = Grid::from_points(
+            &Point::zero(),
+            &Point::new(height.try_into().unwrap(), width.try_into().unwrap(), 0),
+        );
 
         for (x, line) in input.lines().enumerate() {
             for (y, c) in line.trim().chars().enumerate() {
@@ -210,7 +206,9 @@ impl Grid {
                     _ => panic!("invalid character"),
                 };
 
-                *grid.get_mut(&Point::new(x.try_into().unwrap(), y.try_into().unwrap(), 0)).unwrap() = c;
+                *grid
+                    .get_mut(&Point::new(x.try_into().unwrap(), y.try_into().unwrap(), 0))
+                    .unwrap() = c;
             }
         }
 
@@ -240,17 +238,20 @@ impl Grid {
             .get_mut(usize::try_from(p.z).unwrap())
     }
 
-    fn point_iter(&self) -> impl Iterator<Item=Point> + 'static {
+    fn point_iter(&self) -> impl Iterator<Item = Point> + 'static {
         let first = &Point::zero() - &self.origin;
         let ranges = vec![
             (first.x..(first.x + self.size.x)),
             (first.y..(first.y + self.size.y)),
             (first.z..(first.z + self.size.z)),
         ];
-        ranges.into_iter().multi_cartesian_product().map(|v| Point::new(v[0], v[1], v[2]))
+        ranges
+            .into_iter()
+            .multi_cartesian_product()
+            .map(|v| Point::new(v[0], v[1], v[2]))
     }
 
-    fn visit(&self) -> impl Iterator<Item=(Point, Cube)> + '_ {
+    fn visit(&self) -> impl Iterator<Item = (Point, Cube)> + '_ {
         let mut iter = self.point_iter();
         std::iter::from_fn(move || {
             let p = iter.next()?;
@@ -317,11 +318,7 @@ impl Add for &'_ Point {
     type Output = Point;
 
     fn add(self, other: &'_ Point) -> Self::Output {
-        Point::new(
-            self.x + other.x,
-            self.y + other.y,
-            self.z + other.z,
-        )
+        Point::new(self.x + other.x, self.y + other.y, self.z + other.z)
     }
 }
 
@@ -337,11 +334,7 @@ impl Sub for &'_ Point {
     type Output = Point;
 
     fn sub(self, other: &'_ Point) -> Self::Output {
-        Point::new(
-            self.x - other.x,
-            self.y - other.y,
-            self.z - other.z,
-        )
+        Point::new(self.x - other.x, self.y - other.y, self.z - other.z)
     }
 }
 

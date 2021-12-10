@@ -23,7 +23,7 @@ pub fn part2(_input: String) -> Result<u64> {
 fn parse_input(input: String) -> Result<Vec<PartialTile>> {
     let mut tiles: Vec<PartialTile> = input
         .split("\n\n")
-        .map(|t| PartialTile::from_input(t))
+        .map(PartialTile::from_input)
         .collect::<Result<_, _>>()?;
 
     for i in 0..tiles.len() {
@@ -104,14 +104,12 @@ impl Tile {
     }
 
     fn get_sides(&self) -> Vec<Side> {
-        let mut sides = Vec::new();
-
-        sides.push(self.get_side(Position::Top));
-        sides.push(self.get_side(Position::Right));
-        sides.push(self.get_side(Position::Bottom));
-        sides.push(self.get_side(Position::Left));
-
-        sides
+        vec![
+            self.get_side(Position::Top),
+            self.get_side(Position::Right),
+            self.get_side(Position::Bottom),
+            self.get_side(Position::Left),
+        ]
     }
 }
 
